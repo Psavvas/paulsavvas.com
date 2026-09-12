@@ -1,7 +1,7 @@
 import { Marked } from 'marked';
 
-// Markdown → HTML pipeline shared by projects, blog posts, and the "Now"
-// section. Ported from the previous Notion integration so rendered output
+// Markdown → HTML pipeline shared by projects, blog posts, and the About
+// page. Ported from the previous Notion integration so rendered output
 // (image figures, video embeds, top-link buttons) is unchanged.
 
 function escapeHtml(value: string): string {
@@ -184,9 +184,16 @@ export function renderBannerMarkdown(markdown: string): string {
   return (bannerRenderer.parse(source, { async: false }) as string).trim();
 }
 
-function buildTopLinksHtml(html: string): string {
+interface ButtonLink {
+  href: string;
+  label: string;
+  external: boolean;
+}
+
+/** Every distinct link in rendered HTML, in document order. */
+function extractLinks(html: string): ButtonLink[] {
   const linkPattern = /<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-  const links: Array<{ href: string; label: string; external: boolean }> = [];
+  const links: ButtonLink[] = [];
   const seen = new Set<string>();
 
   for (const match of html.matchAll(linkPattern)) {
@@ -207,6 +214,16 @@ function buildTopLinksHtml(html: string): string {
     links.push({ href, label, external });
   }
 
+  return links;
+}
+
+function externalAttrs(external: boolean): string {
+  return external ? ' target="_blank" rel="noopener noreferrer"' : '';
+}
+
+function buildTopLinksHtml(html: string): string {
+  const links = extractLinks(html);
+
   if (links.length === 0) return '';
 
   const hasMultipleLinks = links.length > 1;
@@ -214,11 +231,30 @@ function buildTopLinksHtml(html: string): string {
   return `<div class="mt-10 flex flex-wrap gap-3">${links
     .map(
       ({ href, label, external }, index) =>
-        `<a href="${href}"${external ? ' target="_blank" rel="noopener noreferrer"' : ''} class="site-btn hover-lift ${
+        `<a href="${href}"${externalAttrs(external)} class="site-btn hover-lift ${
           hasMultipleLinks && index === 0 ? 'site-btn--project-primary' : ''
         }">${label}</a>`
     )
     .join('')}</div>`;
+}
+
+/**
+ * Renders a Markdown list of links as bare site buttons — used by the About
+ * page, whose link row is editable from the admin portal. The caller supplies
+ * the wrapping layout, and no link is promoted to a primary button.
+ */
+export function renderButtonLinks(markdown: string): string {
+  const source = markdown?.trim();
+  if (!source) return '';
+
+  const html = bannerRenderer.parse(source, { async: false }) as string;
+
+  return extractLinks(html)
+    .map(
+      ({ href, label, external }) =>
+        `<a class="site-btn hover-lift" href="${href}"${externalAttrs(external)}>${label}</a>`
+    )
+    .join('');
 }
 
 /**

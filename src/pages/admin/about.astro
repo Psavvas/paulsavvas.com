@@ -1,0 +1,244 @@
+---
+import DbErrorNotice from '../../components/admin/DbErrorNotice.astro';
+import MarkdownEditor from '../../components/admin/MarkdownEditor.astro';
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import {
+  ABOUT_DEFAULTS,
+  adminGetAboutContent,
+  adminSaveAboutContent,
+  readAboutForm,
+  type AboutContent,
+} from '../../lib/about-content';
+
+// Defence in depth: /admin is gated in src/middleware.ts, and again here so
+// that no page is one middleware mistake away from being public.
+if (!Astro.locals.admin) return Astro.redirect('/admin/login');
+
+let content: AboutContent = { ...ABOUT_DEFAULTS };
+let error = '';
+let dbError = '';
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData();
+  content = readAboutForm(form);
+
+  try {
+    await adminSaveAboutContent(content);
+    return Astro.redirect('/admin/about?saved=1');
+  } catch (err) {
+    error = err instanceof Error ? err.message : String(err);
+  }
+} else {
+  try {
+    content = await adminGetAboutContent();
+  } catch (err) {
+    dbError = err instanceof Error ? err.message : String(err);
+  }
+}
+
+const saved = Astro.url.searchParams.has('saved');
+
+const inputCls =
+  'mt-1 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 dark:focus:border-neutral-500';
+const labelCls =
+  'block text-sm font-medium text-neutral-900 dark:text-neutral-100';
+const helpCls = 'mt-1 text-xs text-neutral-500 dark:text-neutral-400';
+const sectionCls =
+  'rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900';
+const sectionHeadingCls =
+  'text-lg font-semibold text-neutral-900 dark:text-neutral-100';
+---
+
+<AdminLayout title="About page">
+  <header class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1
+        class="text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100"
+      >
+        About page
+      </h1>
+      <p class="mt-2 text-sm leading-6 text-neutral-600 dark:text-neutral-400">
+        Every section of the About page. Clear a field to put the built-in copy
+        back — nothing on the page can end up blank.
+      </p>
+    </div>
+    <a
+      href="/about"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="site-btn site-btn--sm hover-lift"
+    >
+      View About page ↗
+    </a>
+  </header>
+
+  {dbError && <DbErrorNotice message={dbError} />}
+
+  {
+    saved && (
+      <div class="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+        About page saved.
+      </div>
+    )
+  }
+
+  {
+    error && (
+      <div class="mt-6 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300">
+        {error}
+      </div>
+    )
+  }
+
+  <form method="post" class="mt-8 space-y-6">
+    <section class={sectionCls}>
+      <h2 class={sectionHeadingCls}>Intro</h2>
+      <p class={helpCls}>
+        The top of the page: label, headline, and opening paragraphs.
+      </p>
+
+      <div class="mt-4 grid gap-6 md:grid-cols-2">
+        <div>
+          <label for="eyebrow" class={labelCls}>Label</label>
+          <input
+            id="eyebrow"
+            name="eyebrow"
+            type="text"
+            value={content.eyebrow}
+            class={inputCls}
+          />
+          <p class={helpCls}>Small uppercase text above the headline.</p>
+        </div>
+
+        <div>
+          <label for="heading" class={labelCls}>Headline</label>
+          <input
+            id="heading"
+            name="heading"
+            type="text"
+            value={content.heading}
+            class={inputCls}
+          />
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <MarkdownEditor
+          name="introMd"
+          label="Opening paragraphs"
+          value={content.introMd}
+          rows={12}
+        />
+      </div>
+    </section>
+
+    <section class={sectionCls}>
+      <h2 class={sectionHeadingCls}>Left card</h2>
+      <p class={helpCls}>
+        The first of the two cards below the intro — "What I care about" by
+        default.
+      </p>
+
+      <div class="mt-4">
+        <label for="valuesHeading" class={labelCls}>Card heading</label>
+        <input
+          id="valuesHeading"
+          name="valuesHeading"
+          type="text"
+          value={content.valuesHeading}
+          class={inputCls}
+        />
+      </div>
+
+      <div class="mt-6">
+        <MarkdownEditor
+          name="valuesMd"
+          label="Card content"
+          value={content.valuesMd}
+          rows={10}
+          hint="Markdown supported. A list — `- **Simplicity:** keep it simple.` — matches the existing layout."
+          allowUploads={false}
+        />
+      </div>
+    </section>
+
+    <section class={sectionCls}>
+      <h2 class={sectionHeadingCls}>Right card</h2>
+      <p class={helpCls}>The second card — "What I work on" by default.</p>
+
+      <div class="mt-4">
+        <label for="workHeading" class={labelCls}>Card heading</label>
+        <input
+          id="workHeading"
+          name="workHeading"
+          type="text"
+          value={content.workHeading}
+          class={inputCls}
+        />
+      </div>
+
+      <div class="mt-6">
+        <MarkdownEditor
+          name="workMd"
+          label="Card content"
+          value={content.workMd}
+          rows={10}
+          hint="Markdown supported. A list keeps it consistent with the other card."
+          allowUploads={false}
+        />
+      </div>
+    </section>
+
+    <section class={sectionCls}>
+      <h2 class={sectionHeadingCls}>"Now" section</h2>
+      <p class={helpCls}>
+        What you are working on at the moment, plus the buttons underneath it.
+      </p>
+
+      <div class="mt-4">
+        <label for="nowHeading" class={labelCls}>Section heading</label>
+        <input
+          id="nowHeading"
+          name="nowHeading"
+          type="text"
+          value={content.nowHeading}
+          class={inputCls}
+        />
+      </div>
+
+      <div class="mt-6">
+        <MarkdownEditor
+          name="nowMd"
+          label="Section content"
+          value={content.nowMd}
+          rows={10}
+        />
+      </div>
+
+      <div class="mt-6">
+        <label for="linksMd" class={labelCls}>Buttons</label>
+        <textarea
+          id="linksMd"
+          name="linksMd"
+          rows="4"
+          class={`${inputCls} font-mono`}>{content.linksMd}</textarea
+        >
+        <p class={helpCls}>
+          One Markdown link per line — <code
+            >[Visit GitHub](https://github.com/psavvas)</code
+          >. Each becomes a button at the bottom of the page.
+        </p>
+      </div>
+    </section>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button type="submit" class="site-btn hover-lift">Save</button>
+      <a
+        href="/admin"
+        class="text-sm font-medium text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+      >
+        Cancel
+      </a>
+    </div>
+  </form>
+</AdminLayout>

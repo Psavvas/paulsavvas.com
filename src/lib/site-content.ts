@@ -1,46 +1,40 @@
 import { getSql } from './db';
-import { renderMarkdown } from './markdown';
-
-const NOW_KEY = 'now';
 
 /**
- * HTML for the "Now" section on /about. Returns '' when unavailable so the
- * page can fall back to its static copy.
+ * Key/value store behind the editable parts of the site that aren't projects,
+ * posts, banners, or redirects. One row per field: `key` names the field (for
+ * example `about.heading`) and `body_md` holds its value — Markdown for prose
+ * fields, plain text for short ones like headings.
  */
-export async function getNowSectionHtml(): Promise<string> {
-  try {
-    const sql = getSql();
-    const rows = await sql`
-      select body_md from site_content where key = ${NOW_KEY} limit 1
-    `;
-    if (rows.length === 0) return '';
-    return renderMarkdown(rows[0].body_md ?? '');
-  } catch (error) {
-    console.warn(
-      'Failed to load "Now" section from the database; using fallback copy.',
-      error
-    );
-    return '';
+
+/** Every stored field, keyed by `key`. Unset fields are simply absent. */
+export async function getSiteContent(): Promise<Record<string, string>> {
+  const sql = getSql();
+  // The whole table is a handful of rows, so it is cheaper to read it in one
+  // round trip than to bind a key list per caller.
+  const rows = await sql`select key, body_md from site_content`;
+
+  const values: Record<string, string> = {};
+  for (const row of rows) {
+    values[String(row.key)] = row.body_md ?? '';
   }
+  return values;
 }
 
-// ---------------------------------------------------------------------------
-// Admin portal queries
-// ---------------------------------------------------------------------------
-
-export async function adminGetNowMarkdown(): Promise<string> {
+/** Upserts the given fields. Keys that aren't passed are left untouched. */
+export async function saveSiteContent(
+  values: Record<string, string>
+): Promise<void> {
   const sql = getSql();
-  const rows = await sql`
-    select body_md from site_content where key = ${NOW_KEY} limit 1
-  `;
-  return rows.length > 0 ? (rows[0].body_md ?? '') : '';
-}
 
-export async function adminSaveNowMarkdown(bodyMd: string): Promise<void> {
-  const sql = getSql();
-  await sql`
-    insert into site_content (key, body_md)
-    values (${NOW_KEY}, ${bodyMd})
-    on conflict (key) do update set body_md = excluded.body_md
-  `;
+  // One statement per field: the tagged-template client has no transaction of
+  // its own, and a partial save on a dropped connection is recoverable — the
+  // editor is one form the owner can simply submit again.
+  for (const [key, value] of Object.entries(values)) {
+    await sql`
+      insert into site_content (key, body_md)
+      values (${key}, ${value})
+      on conflict (key) do update set body_md = excluded.body_md
+    `;
+  }
 }

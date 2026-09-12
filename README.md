@@ -1,6 +1,6 @@
 # Personal site
 
-Astro 7 + TypeScript + Tailwind, deployed to Vercel with server-side rendering. Site content (projects, blog posts, short links, and the About page's "Now" section) lives in a **Neon Postgres** database and is managed through an **admin portal** at `/admin`, secured with [Better Auth](https://better-auth.com). Uses Bun as the package manager.
+Astro 7 + TypeScript + Tailwind, deployed to Vercel with server-side rendering. Site content (projects, blog posts, short links, and the whole About page) lives in a **Neon Postgres** database and is managed through an **admin portal** at `/admin`, secured with [Better Auth](https://better-auth.com). Uses Bun as the package manager.
 
 ## Quick start
 
@@ -16,7 +16,7 @@ Then open <http://localhost:4321>. The admin portal is at <http://localhost:4321
 
 Content and admin accounts both live in a [Neon](https://console.neon.tech) Postgres database. Put its **connection string** in `DATABASE_URL` (locally in `.env`, and on Vercel under _Settings → Environment Variables_), and set `BETTER_AUTH_SECRET` to a long random value (`openssl rand -base64 32`) in the same places.
 
-The database holds these tables: `projects`, `blog_posts`, `banners`, `redirects`, and `site_content` for site content, plus `user`, `session`, `account`, and `verification` for Better Auth, plus `login_attempts` for login throttling.
+The database holds these tables: `projects`, `blog_posts`, `banners`, `redirects`, and `site_content` (a key/value row per editable field, such as `about.heading`) for site content, plus `user`, `session`, `account`, and `verification` for Better Auth, plus `login_attempts` for login throttling.
 
 `login_attempts` is created automatically on the first login attempt (`create table if not exists`), so there is nothing to run by hand — but the database role in `DATABASE_URL` needs permission to create tables. If it doesn't have that, logins will fail closed rather than fall back to being unthrottled.
 
@@ -39,7 +39,7 @@ Sign in at `/admin` with your email and password. From there you can:
 - **Blog** — write posts in Markdown with live preview, tags, publish dates, and an optional featured project.
 - **Redirects** — manage `paulsavvas.com/redirect/<slug>` short links.
 - **Banners** — full-width announcements above the navigation, written in Markdown with a colour, an on/off switch, and a stacking order. Choose where each one shows (all pages, home only, or a hand-picked set of pages including individual projects and blog posts); several can be active at once. Anything longer than two lines gets a "Learn more" button that expands it.
-- **Now section** — edit the Markdown blurb shown on the About page.
+- **About page** — edit every section of `/about`: the label, headline, and intro, both cards, the "Now" blurb, and the buttons under it. Clearing a field restores that section's built-in copy, so the page can never come out blank.
 - **Account** — change your password (which signs other devices out).
 
 Markdown extras: `![alt](url)` images are laid out automatically (pairs become a two-column grid), and YouTube/Vimeo links become embedded players.
