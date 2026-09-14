@@ -6,6 +6,13 @@ const PUBLIC_ADMIN_PATHS = new Set(['/admin/login']);
 /** Methods that can't change server state, and so need no origin check. */
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+// Public pages are database-backed, but they do not contain per-user data.
+// Let Vercel's CDN serve the same rendered response for a short period instead
+// of invoking a serverless function (and Neon) for every browser or crawler
+// request. Edits remain effectively immediate while the database avoids the
+// much more expensive "query on every page view" pattern.
+const PUBLIC_CACHE_CONTROL = 'public, s-maxage=60, stale-while-revalidate=300';
+
 function normalize(pathname: string): string {
   return pathname.replace(/\/+$/, '') || '/';
 }
@@ -40,7 +47,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const pathname = normalize(context.url.pathname);
 
   if (!pathname.startsWith('/admin')) {
-    return next();
+    const response = await next();
+
+    if (
+      SAFE_METHODS.has(context.request.method) &&
+      !response.headers.has('Cache-Control')
+    ) {
+      response.headers.set('Cache-Control', PUBLIC_CACHE_CONTROL);
+    }
+
+    return response;
   }
 
   // Every admin mutation is a plain HTML form calling the database directly, so
