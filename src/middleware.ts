@@ -49,9 +49,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (!pathname.startsWith('/admin')) {
     const response = await next();
 
+    const cacheControl = response.headers
+      .get('Cache-Control')
+      ?.trim()
+      .toLowerCase();
+
     if (
       SAFE_METHODS.has(context.request.method) &&
-      !response.headers.has('Cache-Control')
+      (!cacheControl || cacheControl === 'public')
     ) {
       response.headers.set('Cache-Control', PUBLIC_CACHE_CONTROL);
     }
