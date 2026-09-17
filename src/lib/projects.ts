@@ -1,4 +1,5 @@
 import { getSql } from './db';
+import { getPublicContent, invalidateCache } from './public-content';
 import { renderMarkdown, splitProjectHtml } from './markdown';
 
 export interface ProjectRecord {
@@ -98,27 +99,23 @@ function sortProjects(projects: ProjectRecord[]): ProjectRecord[] {
     }
 
     return left.title.localeCompare(right.title);
-  });
+  })();
 }
 
 // Public getters never throw: if the database is missing or unreachable the
 // site renders with empty content instead of a 500. The failure is logged
 // (visible in Vercel's function logs) and surfaced in the /admin dashboard.
 export async function getPublishedProjects(): Promise<ProjectRecord[]> {
-  try {
-    const sql = getSql();
-    const rows = await sql`
-      select id, title, summary, slug, tags, year, featured, ai_built, has_page,
-             project_info_url, featured_blog_slug
-      from projects
-      where visibility = 'published'
-    `;
+  return (async () => {
+    try {
+      const rows = (await getPublicContent()).projects;
 
-    return sortProjects(rows.map(toProjectRecord));
-  } catch (error) {
-    console.error('Failed to load projects from the database.', error);
-    return [];
-  }
+      return sortProjects(rows.map(toProjectRecord));
+    } catch (error) {
+      console.error('Failed to load projects from the database.', error);
+      return [];
+    }
+  })();
 }
 
 export async function getPublishedProjectPages(): Promise<ProjectRecord[]> {
@@ -131,29 +128,26 @@ export async function getPublishedProjectPages(): Promise<ProjectRecord[]> {
 export async function getProjectBySlug(
   slug: string
 ): Promise<ProjectRecord | undefined> {
-  try {
-    const sql = getSql();
-    const rows = await sql`
-      select id, title, summary, slug, tags, year, featured, ai_built, has_page,
-             project_info_url, featured_blog_slug, body_md
-      from projects
-      where visibility = 'published' and has_page = true and slug = ${slug}
-      limit 1
-    `;
+  return (async () => {
+    try {
+      const rows = (await getPublicContent()).projects.filter(
+        (row) => row.has_page && row.slug === slug
+      );
 
-    if (rows.length === 0) return undefined;
+      if (rows.length === 0) return undefined;
 
-    const project = toProjectRecord(rows[0]);
-    const html = renderMarkdown(rows[0].body_md ?? '');
-    const { topLinksHtml, bodyHtml } = splitProjectHtml(html);
-    project.topLinksHtml = topLinksHtml;
-    project.bodyHtml = bodyHtml;
+      const project = toProjectRecord(rows[0]);
+      const html = renderMarkdown(rows[0].body_md ?? '');
+      const { topLinksHtml, bodyHtml } = splitProjectHtml(html);
+      project.topLinksHtml = topLinksHtml;
+      project.bodyHtml = bodyHtml;
 
-    return project;
-  } catch (error) {
-    console.error('Failed to load project from the database.', error);
-    return undefined;
-  }
+      return project;
+    } catch (error) {
+      console.error('Failed to load project from the database.', error);
+      return undefined;
+    }
+  })();
 }
 
 export function getProjectDestination(
@@ -215,6 +209,7 @@ export async function adminCreateProject(input: ProjectInput): Promise<string> {
        ${input.bodyMd}, ${input.visibility})
     returning id
   `;
+  invalidateCache('projects');
   return rows[0].id as string;
 }
 
@@ -239,9 +234,11 @@ export async function adminUpdateProject(
       visibility = ${input.visibility}
     where id = ${id}
   `;
+  invalidateCache('projects');
 }
 
 export async function adminDeleteProject(id: string): Promise<void> {
   const sql = getSql();
   await sql`delete from projects where id = ${id}`;
+  invalidateCache('projects');
 }

@@ -62,7 +62,22 @@ How the portal is protected:
 
 One trade-off worth knowing: because the throttle keys on the email address, someone who knows the owner's address can deliberately trigger a 15-minute lockout. That is the accepted cost of bounding password guessing on a single-account portal.
 
-Everything saves straight to Postgres and appears on the live site immediately — no rebuild needed. New items start as **drafts**; flip visibility to **published** when ready.
+Everything saves straight to Postgres — no rebuild needed. New items start as **drafts**; flip visibility to **published** when ready.
+
+Public pages share a bounded content snapshot, following the Mini-THON site's
+pattern: one SQL round trip loads published projects/posts, active banners,
+redirects, and site content. A warm server instance reuses it for 20 seconds,
+deduplicates concurrent refreshes, and can serve the last good snapshot for up
+to five minutes during database failures. Admin content reads bypass this cache.
+Writes invalidate the local snapshot; other instances and the CDN expire
+independently, so public edits are not guaranteed to appear immediately.
+
+The existing public CDN policy caches responses for 60 seconds with a 300-second
+stale-while-revalidate window. This reduces queries but does not guarantee lower
+Neon CU-hours: frequent database activity can still prevent compute suspension.
+The snapshot is intended for this small portfolio, not a large content library;
+it loads published Markdown bodies into memory and requires all content tables
+to be available for a refresh.
 
 ## Scripts
 

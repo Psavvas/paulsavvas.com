@@ -133,7 +133,7 @@ export async function getAboutContentHtml(): Promise<AboutContentHtml> {
  * editor can show them instead of silently editing fallback copy.
  */
 export async function adminGetAboutContent(): Promise<AboutContent> {
-  return fromStore(await getSiteContent());
+  return fromStore(await getSiteContent(true));
 }
 
 export async function adminSaveAboutContent(
