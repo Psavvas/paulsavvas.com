@@ -6,7 +6,6 @@ import {
   type BannerScope,
 } from './banner-colors';
 import { getSql } from './db';
-import { getPublicContent, invalidateCache } from './public-content';
 import { renderBannerMarkdown } from './markdown';
 
 // Presentation constants live in ./banner-colors so browser scripts can use
@@ -88,21 +87,23 @@ function matchesPath(banner: Banner, pathname: string): boolean {
  * unreachable database simply means no banners.
  */
 export async function getBannersForPath(pathname: string): Promise<Banner[]> {
-  const target = normalizePath(pathname);
-  return (async () => {
-    try {
-      const rows = (await getPublicContent()).banners;
+  try {
+    const sql = getSql();
+    const rows = await sql`
+      select id, body_md, color, scope, paths, active, sort_order, updated_at
+      from banners
+      where active = true
+      order by sort_order asc, created_at asc
+    `;
 
-      return rows
-        .map(toBanner)
-        .filter(
-          (banner) => banner.bodyMd.trim() && matchesPath(banner, target)
-        );
-    } catch (error) {
-      console.error('Failed to load banners from the database.', error);
-      return [];
-    }
-  })();
+    const target = normalizePath(pathname);
+    return rows
+      .map(toBanner)
+      .filter((banner) => banner.bodyMd.trim() && matchesPath(banner, target));
+  } catch (error) {
+    console.error('Failed to load banners from the database.', error);
+    return [];
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -136,7 +137,6 @@ export async function adminCreateBanner(input: BannerInput): Promise<string> {
             ${input.active}, ${input.sortOrder})
     returning id
   `;
-  invalidateCache('banners');
   return rows[0].id as string;
 }
 
@@ -155,11 +155,9 @@ export async function adminUpdateBanner(
       sort_order = ${input.sortOrder}
     where id = ${id}
   `;
-  invalidateCache('banners');
 }
 
 export async function adminDeleteBanner(id: string): Promise<void> {
   const sql = getSql();
   await sql`delete from banners where id = ${id}`;
-  invalidateCache('banners');
 }

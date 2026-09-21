@@ -1,5 +1,4 @@
 import { getSql } from './db';
-import { getPublicContent, invalidateCache } from './public-content';
 
 export interface RedirectRecord {
   id: string;
@@ -34,21 +33,20 @@ export async function getRedirectDestination(
 
   // Never throws: an unreachable database sends visitors to /404 instead of
   // returning a 500.
-  return (async () => {
-    try {
-      const rows = (await getPublicContent()).redirects.filter(
-        (row) => row.slug === slug
-      );
+  try {
+    const sql = getSql();
+    const rows = await sql`
+      select destination from redirects where slug = ${slug} limit 1
+    `;
 
-      if (rows.length === 0) return undefined;
+    if (rows.length === 0) return undefined;
 
-      const destination = normalizeDestination(rows[0].destination ?? '');
-      return destination || undefined;
-    } catch (error) {
-      console.error('Failed to load redirect from the database.', error);
-      return undefined;
-    }
-  })();
+    const destination = normalizeDestination(rows[0].destination ?? '');
+    return destination || undefined;
+  } catch (error) {
+    console.error('Failed to load redirect from the database.', error);
+    return undefined;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -84,11 +82,9 @@ export async function adminSaveRedirect(
     values (${slug}, ${destination})
     on conflict (slug) do update set destination = excluded.destination
   `;
-  invalidateCache('redirect');
 }
 
 export async function adminDeleteRedirect(id: string): Promise<void> {
   const sql = getSql();
   await sql`delete from redirects where id = ${id}`;
-  invalidateCache('redirect');
 }
