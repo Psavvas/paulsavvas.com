@@ -73,4 +73,13 @@ Everything saves straight to Postgres and appears on the live site immediately â
 
 ## Deployment
 
+### Uptime monitoring
+
+Use `https://paulsavvas.com/health` for frequent availability checks (including
+Instatus), instead of `/`. GET returns `200` with `{"status":"ok"}`; HEAD returns
+`200` with no body. Responses use `Cache-Control: no-store` so checks reach the
+web runtime. The endpoint does not query Neon or render banners. It checks web
+availability, not database health. Monitoring the homepage instead runs content
+queries on cache misses and can repeatedly wake Neon or delay suspension.
+
 Optimized for Vercel with the `@astrojs/vercel` adapter. Connect the repo to Vercel, add the environment variables above, and deploy.
