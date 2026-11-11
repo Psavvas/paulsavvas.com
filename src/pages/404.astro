@@ -1,42 +1,24 @@
 ---
-// Server-rendered on purpose. Unmatched /admin/* URLs fall through to this
-// page, and the auth middleware needs the request headers to tell a signed-in
-// admin (who should see a real 404) from an anonymous visitor (who gets sent
-// to the login page). Prerendering hides those headers from middleware.
 export const prerender = false;
 
 import BaseLayout from '../layouts/BaseLayout.astro';
-
-const actionCls = 'site-btn hover-lift';
+import UiIcon from '../components/UiIcon.astro';
 ---
 
 <BaseLayout title="Page not found | Paul Savvas">
-  <div
-    class="min-h-[calc(100vh-8rem)] bg-white text-center transition-colors dark:bg-neutral-950 dark:text-neutral-100"
-  >
-    <main
-      class="mx-auto flex w-full max-w-4xl flex-col items-center gap-6 px-6 py-16 text-neutral-900 sm:px-10 sm:py-24 dark:text-neutral-100"
-    >
-      <p
-        class="text-7xl font-bold leading-none tracking-[0.1em] text-neutral-700 sm:text-8xl dark:text-neutral-300"
+  <main class="site-frame page-shell message-page">
+    <p class="error-code" aria-hidden="true">404</p>
+    <h1 class="display-heading">Page not found.</h1>
+    <p class="message-copy">
+      Looks like this route is still in prototype mode. Explore my projects or
+      blog while this one is on the workbench.
+    </p>
+    <div class="action-row">
+      <a class="site-btn site-btn--primary" href="/"
+        >Return home <UiIcon name="arrow" /></a
       >
-        404
-      </p>
-      <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
-        Page not found.
-      </h1>
-      <p
-        class="max-w-2xl text-base leading-7 text-neutral-700 dark:text-neutral-300"
-      >
-        Looks like this route is still in prototype mode. Explore my projects or
-        blog while this one is on the workbench.
-      </p>
-
-      <div class="flex flex-wrap gap-3 pt-1">
-        <a class={actionCls} href="/">Return home</a>
-        <a class={actionCls} href="/projects">View projects</a>
-        <a class={actionCls} href="/blog">Visit blog</a>
-      </div>
-    </main>
-  </div>
+      <a class="site-btn" href="/projects">View projects</a>
+      <a class="site-btn" href="/blog">Visit blog</a>
+    </div>
+  </main>
 </BaseLayout>

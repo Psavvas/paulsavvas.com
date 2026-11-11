@@ -8,6 +8,8 @@
  * is already server-rendered, so there is no extra data fetch and the page
  * stays fast.
  */
+import UiIcon from './UiIcon.astro';
+
 interface Props {
   /** id of the container whose `[data-search]` children should be filtered */
   targetId: string;
@@ -34,21 +36,9 @@ const {
 const inputId = `${targetId}-search`;
 ---
 
-<div class={`relative ${className}`}>
+<div class:list={['search-field', className]}>
   <label for={inputId} class="sr-only">{label}</label>
-  <svg
-    class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400 dark:text-neutral-500"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    aria-hidden="true"
-  >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"></path>
-  </svg>
+  <span class="search-icon"><UiIcon name="search" /></span>
   <input
     id={inputId}
     type="search"
@@ -59,19 +49,37 @@ const inputId = `${targetId}-search`;
     data-target={targetId}
     data-empty={emptyId ?? ''}
     data-count={countId ?? ''}
-    class="w-full rounded-lg border border-neutral-200 bg-white py-2.5 pl-10 pr-4 text-sm text-neutral-900 transition-colors placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:border-neutral-600 dark:focus:ring-neutral-800"
   />
 </div>
 
-<script>
-  function setHidden(el: HTMLElement, hide: boolean) {
-    // Set both the attribute (so Tailwind's `divide-y` skips it and it's
-    // hidden from assistive tech) and an inline style (which reliably wins
-    // over display utilities such as `flex` on the item itself).
-    el.toggleAttribute('hidden', hide);
-    el.style.display = hide ? 'none' : '';
+<style>
+  .search-field {
+    position: relative;
   }
+  .search-icon {
+    position: absolute;
+    top: 50%;
+    left: 0.85rem;
+    width: 1.1rem;
+    color: var(--muted);
+    pointer-events: none;
+    translate: 0 -50%;
+  }
+  input {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.7rem 0.9rem 0.7rem 2.5rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 0.5rem;
+    background: var(--surface);
+    color: var(--foreground);
+  }
+  input::placeholder {
+    color: var(--muted);
+  }
+</style>
 
+<script>
   function setupSearch(input: HTMLInputElement) {
     const targetId = input.getAttribute('data-target');
     if (!targetId) return;
@@ -98,7 +106,7 @@ const inputId = `${targetId}-search`;
       for (const item of items) {
         const haystack = item.getAttribute('data-search') || '';
         const match = terms.every((term) => haystack.includes(term));
-        setHidden(item, !match);
+        item.hidden = !match;
         if (match) visible += 1;
       }
 

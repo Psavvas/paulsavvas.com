@@ -1,9 +1,13 @@
 ---
 import '../styles/globals.css';
+import '../styles/admin.css';
+import SiteFonts from '../components/SiteFonts.astro';
+import ThemePreference from '../components/ThemePreference.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import UiIcon from '../components/UiIcon.astro';
 
 interface Props {
   title: string;
-  /** Hide the nav chrome (used by the login page). */
   bare?: boolean;
 }
 
@@ -20,11 +24,6 @@ const navEntries = [
 ];
 
 const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
-
-function isActive(path: string): boolean {
-  if (path === '/admin') return currentPath === '/admin';
-  return currentPath === path || currentPath.startsWith(`${path}/`);
-}
 ---
 
 <html lang="en">
@@ -34,79 +33,64 @@ function isActive(path: string): boolean {
     <meta name="robots" content="noindex, nofollow" />
     <title>{title} | Site Admin</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-
-    {/* Inline theme initialisation — runs before paint to avoid flash */}
-    <script is:inline>
-      (function applyStoredTheme() {
-        var stored = localStorage.getItem('ps-theme');
-        var prefersDark = window.matchMedia(
-          '(prefers-color-scheme: dark)'
-        ).matches;
-        var useDark = stored === 'dark' || (stored !== 'light' && prefersDark);
-        document.documentElement.classList.toggle('dark', useDark);
-      })();
-    </script>
+    <SiteFonts />
+    <ThemePreference />
   </head>
 
-  <body class="min-h-screen bg-neutral-50 font-sans dark:bg-neutral-950">
+  <body class="admin-site">
     {
       !bare && (
-        <header class="sticky top-0 z-50 border-b border-neutral-200 bg-white/80 backdrop-blur transition-colors dark:border-neutral-800 dark:bg-neutral-950/80">
-          {/* Mirrors the main site navbar: brand left, links centred, actions right. */}
-          <nav class="mx-auto grid max-w-6xl grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:h-14 md:grid-cols-3 md:py-0">
-            <div class="flex items-center">
+        <header class="admin-header">
+          <div class="site-frame admin-toolbar">
+            <a class="wordmark" href="/admin">
+              <span class="brand-mark" aria-hidden="true" />
+              <span>PS Admin</span>
+            </a>
+            <div class="admin-actions">
               <a
-                href="/admin"
-                class="inline-flex h-10 shrink-0 items-center text-lg font-semibold leading-none tracking-tight text-neutral-900 transition-colors md:h-8 dark:text-neutral-100"
-              >
-                PS
-                <span class="ml-1.5 font-normal text-neutral-500 dark:text-neutral-400">
-                  Admin
-                </span>
-              </a>
-            </div>
-
-            <div class="col-span-2 flex items-center justify-center md:col-span-1 md:col-start-2">
-              <ul class="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-1 md:w-auto md:flex-nowrap md:gap-6">
-                {navEntries.map((entry) => (
-                  <li class="flex">
-                    <a
-                      href={entry.path}
-                      aria-current={isActive(entry.path) ? 'page' : undefined}
-                      class={`inline-flex h-10 items-center whitespace-nowrap text-sm font-medium leading-none transition-colors md:h-8 ${
-                        isActive(entry.path)
-                          ? 'text-neutral-900 dark:text-neutral-100'
-                          : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
-                      }`}
-                    >
-                      {entry.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div class="col-start-2 row-start-1 flex items-center justify-end gap-3 md:col-start-3 md:row-auto">
-              <a
+                class="admin-view"
                 href="/"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="hidden text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 sm:inline dark:text-neutral-400 dark:hover:text-neutral-100"
               >
-                View site ↗
+                View site <UiIcon name="external" />
               </a>
+              <ThemeToggle />
               <form method="post" action="/admin/logout">
-                <button type="submit" class="site-btn site-btn--sm hover-lift">
+                <button type="submit" class="site-btn">
                   Log out
                 </button>
               </form>
             </div>
+          </div>
+          <nav class="site-frame admin-nav" aria-label="Admin navigation">
+            <ul>
+              {navEntries.map(({ label, path }) => {
+                const current = currentPath === path;
+                const active =
+                  current ||
+                  (path !== '/admin' && currentPath.startsWith(`${path}/`));
+
+                return (
+                  <li>
+                    <a
+                      href={path}
+                      aria-current={
+                        current ? 'page' : active ? 'location' : undefined
+                      }
+                    >
+                      {label}
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
           </nav>
         </header>
       )
     }
 
-    <main class="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
+    <main class:list={['site-frame admin-main', { 'admin-login': bare }]}>
       <slot />
     </main>
   </body>

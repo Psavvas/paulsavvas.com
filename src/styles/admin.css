@@ -1,0 +1,115 @@
+/* Apply the site palette to the existing editor and form utilities. */
+.admin-site {
+  --color-neutral-50: #f5f5ef;
+  --color-neutral-100: #eceee8;
+  --color-neutral-200: #cdd2d5;
+  --color-neutral-300: #b7c2d6;
+  --color-neutral-400: #aab6ce;
+  --color-neutral-500: #616d84;
+  --color-neutral-600: #505c6e;
+  --color-neutral-700: #3e4859;
+  --color-neutral-800: #29354c;
+  --color-neutral-900: #161e2e;
+  --color-neutral-950: #101522;
+  min-height: 100svh;
+}
+
+.admin-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.admin-toolbar,
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.8rem;
+}
+
+.admin-toolbar {
+  min-height: 4.5rem;
+  justify-content: space-between;
+  padding-block: 0.65rem;
+}
+.admin-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+.admin-view:hover {
+  color: var(--accent-hover);
+}
+.admin-view svg {
+  width: 1em;
+  height: 1em;
+}
+
+.admin-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-block: 0 0.75rem;
+}
+
+.admin-nav a {
+  display: inline-flex;
+  min-height: 2.55rem;
+  align-items: center;
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.4rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.admin-nav a:hover {
+  background: var(--surface-muted);
+  color: var(--foreground);
+}
+.admin-nav a[aria-current] {
+  background: var(--accent-tint);
+  color: var(--accent-hover);
+}
+
+.admin-main {
+  max-width: 74rem;
+  padding-block: clamp(1.5rem, 4vw, 3.25rem);
+}
+.admin-main :is(h1, h2, h3) {
+  font-family: var(--display-font);
+}
+.admin-login {
+  display: grid;
+  min-height: 100svh;
+  align-items: center;
+}
+
+.login-card {
+  padding: clamp(1.3rem, 4.5vw, 2.2rem);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--accent);
+  border-radius: 0.65rem;
+  background: var(--surface);
+}
+
+.login-card .brand-mark {
+  margin-bottom: 1.1rem;
+}
+.login-card h1 {
+  font-size: 2.25rem;
+  font-weight: 650;
+  letter-spacing: -0.055em;
+  line-height: 1.05;
+}
+.login-card input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.admin-main .site-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
