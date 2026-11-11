@@ -21,7 +21,6 @@ const fullTitle = title.includes('Paul Savvas')
   ? title
   : `${title} | Paul Savvas`;
 const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
-const isHome = currentPath === '/';
 const navEntries = [
   { label: 'Home', path: '/', icon: 'home' },
   { label: 'About', path: '/about', icon: 'person' },
@@ -55,7 +54,7 @@ const currentYear = new Date().getFullYear();
     <Analytics />
   </head>
 
-  <body class:list={['public-site', { 'home-site': isHome }]}>
+  <body class="public-site">
     <a class="skip-link" href="#site-content">Skip to content</a>
     <SiteBanners />
 
@@ -66,38 +65,38 @@ const currentYear = new Date().getFullYear();
             <span class="brand-mark" aria-hidden="true">PS</span>
             <span>Paul Savvas</span>
           </a>
+          <nav class="site-dock" aria-label="Main navigation">
+            <ul>
+              {
+                navEntries.map(({ label, path, icon }) => {
+                  const current = currentPath === path;
+                  const active =
+                    current ||
+                    (path !== '/' && currentPath.startsWith(`${path}/`));
+
+                  return (
+                    <li>
+                      <a
+                        href={path}
+                        aria-current={
+                          current ? 'page' : active ? 'location' : undefined
+                        }
+                      >
+                        <UiIcon name={icon} />
+                        <span>{label}</span>
+                      </a>
+                    </li>
+                  );
+                })
+              }
+            </ul>
+          </nav>
           <div class="toolbar-controls">
             <slot name="toolbar" />
             <ThemeToggle />
           </div>
         </div>
       </header>
-
-      <nav class="site-dock" aria-label="Main navigation">
-        <ul>
-          {
-            navEntries.map(({ label, path, icon }) => {
-              const current = currentPath === path;
-              const active =
-                current || (path !== '/' && currentPath.startsWith(`${path}/`));
-
-              return (
-                <li>
-                  <a
-                    href={path}
-                    aria-current={
-                      current ? 'page' : active ? 'location' : undefined
-                    }
-                  >
-                    <UiIcon name={icon} />
-                    <span>{label}</span>
-                  </a>
-                </li>
-              );
-            })
-          }
-        </ul>
-      </nav>
 
       <div class="site-content" id="site-content" tabindex="-1">
         <slot />

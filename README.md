@@ -12,7 +12,7 @@ bun dev
 
 Then open <http://localhost:4321>. The admin portal is at <http://localhost:4321/admin>.
 
-The homepage skyline loop uses [Manhattan waterfront footage by Sarowar Hussain](https://www.pexels.com/video/time-lapse-video-of-cityscape-during-nighttime-5545407/) under the [Pexels License](https://www.pexels.com/license/).
+The homepage uses [Chicago lakefront footage by K](https://www.pexels.com/video/aerial-view-of-chicago-skyline-and-lake-michigan-26561940/) under the [Pexels License](https://www.pexels.com/license/).
 
 ## Database
 

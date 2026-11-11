@@ -2,93 +2,79 @@
 import UiIcon from './UiIcon.astro';
 ---
 
-<picture class="home-wallpaper">
-  <source media="(max-width: 44rem)" srcset="/skyline-mobile.webp" />
-  <img
-    src="/skyline.webp"
-    alt=""
-    width="960"
-    height="540"
-    fetchpriority="high"
-  />
-</picture>
-<video
-  class="home-video"
-  data-hero-video
-  data-desktop-src="/skyline.mp4"
-  data-mobile-src="/skyline-mobile.mp4"
-  muted
-  playsinline
-  loop
-  preload="none"
-  aria-hidden="true"></video>
-<button
-  class="icon-control hero-video-toggle"
-  type="button"
-  data-hero-video-toggle
-  aria-label="Play background video"
-  hidden
->
-  <span data-play-icon><UiIcon name="play" /></span>
-  <span data-pause-icon><UiIcon name="pause" /></span>
-</button>
+<div class="hero-film">
+  <picture class="home-wallpaper">
+    <source media="(max-width: 44rem)" srcset="/lakefront-mobile.webp" />
+    <img
+      src="/lakefront-1280.webp"
+      srcset="/lakefront-1280.webp 1280w, /lakefront.webp 2400w"
+      sizes="(max-width: 81rem) 91vw, 74rem"
+      alt="Chicago skyline and Lake Michigan"
+      width="2400"
+      height="1080"
+      fetchpriority="high"
+    />
+  </picture>
+  <video
+    class="home-video"
+    data-hero-video
+    data-desktop-src="/lakefront.mp4"
+    data-mobile-src="/lakefront-mobile.mp4"
+    muted
+    playsinline
+    preload="none"
+    aria-hidden="true"></video>
+  <button
+    class="site-btn hero-video-toggle"
+    type="button"
+    data-hero-video-toggle
+    aria-label="Play skyline video"
+    hidden
+  >
+    <span data-play-icon><UiIcon name="play" /></span>
+    <span data-pause-icon><UiIcon name="pause" /></span>
+    <span data-video-action>Play video</span>
+  </button>
+</div>
 
 <script>
   const video = document.querySelector<HTMLVideoElement>('[data-hero-video]');
   const toggle = document.querySelector<HTMLButtonElement>(
     '[data-hero-video-toggle]'
   );
+  const label = toggle?.querySelector('[data-video-action]');
 
-  if (video && toggle) setupHeroVideo(video, toggle);
+  if (video && toggle && label) {
+    const updateControl = () => {
+      const playing = !video.paused && !video.ended;
+      const action = playing ? 'Pause' : video.ended ? 'Replay' : 'Play';
+      toggle.toggleAttribute('data-playing', playing);
+      toggle.setAttribute('aria-label', action + ' skyline video');
+      label.textContent = action + ' video';
+    };
 
-  function setupHeroVideo(video: HTMLVideoElement, toggle: HTMLButtonElement) {
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const compact = window.matchMedia('(max-width: 44rem)');
-    const connection = (
-      navigator as Navigator & { connection?: { saveData?: boolean } }
-    ).connection;
-    let playRequested = !reducedMotion.matches && !connection?.saveData;
-    let inView = false;
-    let pageLoaded = false;
-
-    function syncPlayback() {
-      toggle.toggleAttribute('data-play-requested', playRequested);
-      toggle.setAttribute(
-        'aria-label',
-        playRequested ? 'Pause background video' : 'Play background video'
-      );
-
-      if (!playRequested || !pageLoaded || !inView || document.hidden) {
+    toggle.hidden = false;
+    toggle.addEventListener('click', () => {
+      if (!video.paused && !video.ended) {
         video.pause();
         return;
       }
 
-      const source = compact.matches
-        ? video.dataset.mobileSrc
-        : video.dataset.desktopSrc;
-      if (!source) return;
-
-      if (video.getAttribute('src') !== source) {
-        video.removeAttribute('data-video-ready');
+      if (!video.hasAttribute('src')) {
+        const compact = window.matchMedia('(max-width: 44rem)').matches;
+        const source = compact
+          ? video.dataset.mobileSrc
+          : video.dataset.desktopSrc;
+        if (!source) return;
         video.src = source;
       }
 
-      if (video.paused) {
-        video.play().catch((error: DOMException) => {
-          if (error.name === 'AbortError') return;
-          playRequested = false;
-          syncPlayback();
-        });
-      }
-    }
-
-    toggle.hidden = false;
-    syncPlayback();
-    toggle.addEventListener('click', () => {
-      playRequested = !playRequested;
-      pageLoaded = true;
-      syncPlayback();
+      video.play().catch(updateControl);
     });
+
+    video.addEventListener('play', updateControl);
+    video.addEventListener('pause', updateControl);
+    video.addEventListener('ended', updateControl);
     video.addEventListener('playing', () =>
       video.setAttribute('data-video-ready', '')
     );
@@ -96,34 +82,13 @@ import UiIcon from './UiIcon.astro';
       video.removeAttribute('data-video-ready');
       toggle.hidden = true;
     });
-    document.addEventListener('visibilitychange', syncPlayback);
-    compact.addEventListener('change', syncPlayback);
-    reducedMotion.addEventListener('change', () => {
-      if (reducedMotion.matches) playRequested = false;
-      syncPlayback();
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) video.pause();
     });
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        inView = entry.intersectionRatio >= 0.15;
-        syncPlayback();
-      },
-      { threshold: 0.15 }
-    );
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) video.pause();
+    });
     observer.observe(video);
-
-    function enableAfterPaint() {
-      const enable = () => {
-        pageLoaded = true;
-        syncPlayback();
-      };
-
-      if ('requestIdleCallback' in window)
-        window.requestIdleCallback(enable, { timeout: 600 });
-      else setTimeout(enable, 100);
-    }
-
-    if (document.readyState === 'complete') enableAfterPaint();
-    else window.addEventListener('load', enableAfterPaint, { once: true });
   }
 </script>
