@@ -1,0 +1,14 @@
+---
+import UiIcon from './UiIcon.astro';
+---
+
+<button
+  type="button"
+  class="icon-control theme-toggle"
+  data-theme-toggle
+  aria-label="Change color theme"
+>
+  <span data-theme-icon="light"><UiIcon name="light" /></span>
+  <span data-theme-icon="dark"><UiIcon name="dark" /></span>
+  <span data-theme-icon="system"><UiIcon name="system" /></span>
+</button>

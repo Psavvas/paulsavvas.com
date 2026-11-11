@@ -1,0 +1,181 @@
+---
+import UiIcon from './UiIcon.astro';
+---
+
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    let timer;
+
+    function updateSkylinePeriod() {
+      clearTimeout(timer);
+      const now = new Date();
+      const hour = now.getHours();
+      const theme = root.dataset.theme;
+      const isDaytime = hour >= 6 && hour < 18;
+      const followsClock = theme !== 'light' && theme !== 'dark';
+      const period = (followsClock ? isDaytime : theme === 'light')
+        ? 'day'
+        : 'night';
+
+      if (followsClock) {
+        const next = new Date(now);
+        next.setHours(isDaytime ? 18 : 6, 0, 0, 0);
+        if (hour >= 18) next.setDate(next.getDate() + 1);
+        timer = setTimeout(updateSkylinePeriod, next.getTime() - now.getTime());
+      }
+
+      if (root.dataset.skylinePeriod !== period) {
+        root.dataset.skylinePeriod = period;
+        document.dispatchEvent(new Event('skyline-period-change'));
+      }
+    }
+
+    updateSkylinePeriod();
+    document.addEventListener('theme-preference-change', updateSkylinePeriod);
+    window.addEventListener('pageshow', updateSkylinePeriod);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) updateSkylinePeriod();
+    });
+  })();
+</script>
+
+<div class="hero-film" aria-hidden="true">
+  <video
+    class="home-video"
+    data-hero-video
+    data-day-src="/skyline-day.mp4"
+    data-day-mobile-src="/skyline-day-mobile.mp4"
+    data-night-src="/skyline-night.mp4"
+    data-night-mobile-src="/skyline-night-mobile.mp4"
+    muted
+    playsinline
+    loop
+    preload="none"></video>
+</div>
+<button
+  class="icon-control hero-video-toggle"
+  type="button"
+  data-hero-video-toggle
+  aria-label="Play skyline video"
+  title="Play skyline video"
+  hidden
+>
+  <span data-play-icon><UiIcon name="play" /></span>
+  <span data-pause-icon><UiIcon name="pause" /></span>
+</button>
+
+<script>
+  const video = document.querySelector<HTMLVideoElement>('[data-hero-video]');
+  const toggle = document.querySelector<HTMLButtonElement>(
+    '[data-hero-video-toggle]'
+  );
+
+  if (video && toggle) setupHeroVideo(video, toggle);
+
+  function setupHeroVideo(video: HTMLVideoElement, toggle: HTMLButtonElement) {
+    video.muted = true;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const compact = window.matchMedia('(max-width: 44rem)');
+    const connection = (
+      navigator as Navigator & { connection?: { saveData?: boolean } }
+    ).connection;
+    let playbackRequested = !reducedMotion.matches && !connection?.saveData;
+    let inView = false;
+    let pageReady = false;
+
+    function updateControl() {
+      const label = playbackRequested
+        ? 'Pause skyline video'
+        : 'Play skyline video';
+      toggle.toggleAttribute('data-playing', playbackRequested);
+      toggle.setAttribute('aria-label', label);
+      toggle.title = label;
+    }
+
+    function syncPlayback() {
+      const period =
+        document.documentElement.dataset.skylinePeriod === 'night'
+          ? 'night'
+          : 'day';
+      const source =
+        video.dataset[`${period}${compact.matches ? 'Mobile' : ''}Src`];
+      const loadedSource = video.getAttribute('src');
+
+      if (loadedSource && loadedSource !== source) {
+        video.removeAttribute('data-video-ready');
+        video.removeAttribute('src');
+        video.load();
+      }
+
+      updateControl();
+      if (
+        !source ||
+        !playbackRequested ||
+        !pageReady ||
+        !inView ||
+        document.hidden
+      ) {
+        video.pause();
+        return;
+      }
+
+      if (loadedSource !== source) video.src = source;
+      if (video.paused) {
+        video.play().catch((error: DOMException) => {
+          if (error.name === 'AbortError') return;
+          playbackRequested = false;
+          updateControl();
+        });
+      }
+    }
+
+    toggle.hidden = false;
+    updateControl();
+    toggle.addEventListener('click', () => {
+      playbackRequested = !playbackRequested;
+      pageReady = true;
+      if (playbackRequested && video.error) video.load();
+      syncPlayback();
+    });
+
+    video.addEventListener('playing', () =>
+      video.setAttribute('data-video-ready', '')
+    );
+    video.addEventListener('error', () => {
+      video.removeAttribute('data-video-ready');
+      playbackRequested = false;
+      updateControl();
+    });
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.intersectionRatio >= 0.15;
+        syncPlayback();
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(video);
+    document.addEventListener('skyline-period-change', syncPlayback);
+    document.addEventListener('visibilitychange', syncPlayback);
+    compact.addEventListener('change', syncPlayback);
+    reducedMotion.addEventListener('change', () => {
+      if (reducedMotion.matches) playbackRequested = false;
+      syncPlayback();
+    });
+
+    function enableAfterPaint() {
+      const enable = () => {
+        pageReady = true;
+        syncPlayback();
+      };
+      if ('requestIdleCallback' in window)
+        window.requestIdleCallback(enable, { timeout: 600 });
+      else setTimeout(enable, 100);
+    }
+
+    if (document.readyState === 'complete') enableAfterPaint();
+    else window.addEventListener('load', enableAfterPaint, { once: true });
+  }
+</script>

@@ -1,5 +1,5 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import EntryLayout from '../../layouts/EntryLayout.astro';
 import { getBlogPostBySlug } from '../../lib/blog';
 import { getPublishedProjects } from '../../lib/projects';
 
@@ -10,99 +10,24 @@ if (!post) {
   return Astro.redirect('/404');
 }
 
-const projects = await getPublishedProjects();
 const featuredProject = post.featuredProjectSlug
-  ? projects.find((project) => project.slug === post.featuredProjectSlug)
+  ? (await getPublishedProjects()).find(
+      (project) => project.slug === post.featuredProjectSlug
+    )
   : undefined;
-
-const tagCls =
-  'inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300';
 ---
 
-<BaseLayout title={`${post.title} | Paul Savvas`} description={post.summary}>
-  <div
-    class="min-h-screen bg-white font-sans dark:bg-neutral-950 transition-colors"
-  >
-    <main
-      class="mx-auto w-full max-w-6xl bg-white px-6 py-16 dark:bg-neutral-950 sm:px-16 sm:py-24 animate-fade-in"
-    >
-      <div class="w-full">
-        <a
-          href="/blog"
-          class="inline-flex items-center text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 animate-slide-in-left"
-        >
-          ← Back to Blog
-        </a>
-
-        <header class="mt-8 animate-fade-in-up">
-          <p class="text-sm text-neutral-600 dark:text-neutral-400">
-            {post.date}
-          </p>
-          <h1
-            class="mt-3 text-4xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 sm:text-5xl"
-          >
-            {post.title}
-          </h1>
-          <p
-            class="mt-6 text-base leading-7 text-neutral-700 dark:text-neutral-300"
-          >
-            {post.summary}
-          </p>
-
-          {
-            post.tags && post.tags.length > 0 && (
-              <div class="mt-6 flex flex-wrap gap-2">
-                {post.tags.map((t: string) => (
-                  <span class={tagCls}>{t}</span>
-                ))}
-              </div>
-            )
-          }
-
-          {
-            featuredProject && (
-              <aside class="mt-10 rounded-xl border border-neutral-200 bg-neutral-50/80 p-6 dark:border-neutral-800 dark:bg-neutral-900/60">
-                <div class="flex items-center gap-4">
-                  <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-neutral-200/80 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.8"
-                      class="h-6 w-6"
-                      aria-hidden="true"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M3.75 7.5h16.5M6 4.5h12a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 18 19.5H6a2.25 2.25 0 0 1-2.25-2.25V6.75A2.25 2.25 0 0 1 6 4.5Z"
-                      />
-                    </svg>
-                  </span>
-                  <div class="min-w-0">
-                    <p class="text-xs font-medium uppercase tracking-[0.08em] text-neutral-600 dark:text-neutral-300">
-                      Featured Project
-                    </p>
-                    <a
-                      href={`/projects/${featuredProject.slug}`}
-                      class="mt-1 inline-flex items-center gap-2 text-sm font-medium tracking-tight text-neutral-900 hover:text-neutral-700 dark:text-neutral-100 dark:hover:text-neutral-300"
-                    >
-                      <span class="truncate">{featuredProject.title}</span>
-                      <span aria-hidden="true">→</span>
-                    </a>
-                  </div>
-                </div>
-              </aside>
-            )
-          }
-        </header>
-
-        <article
-          class="mt-10 space-y-5 animate-fade-in-up prose prose-neutral dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:tracking-tight"
-          set:html={post.bodyHtml ?? ''}
-        />
-      </div>
-    </main>
-  </div>
-</BaseLayout>
+<EntryLayout
+  title={post.title}
+  summary={post.summary}
+  section="Blog"
+  date={post.date}
+  dateIso={post.dateIso}
+  tags={post.tags}
+  bodyHtml={post.bodyHtml}
+  related={featuredProject && {
+    label: 'Featured Project',
+    title: featuredProject.title,
+    href: `/projects/${featuredProject.slug}`,
+  }}
+/>

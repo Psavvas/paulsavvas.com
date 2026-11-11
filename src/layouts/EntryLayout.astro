@@ -1,0 +1,83 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import UiIcon from '../components/UiIcon.astro';
+
+interface Props {
+  title: string;
+  summary: string;
+  section: 'Projects' | 'Blog';
+  date?: string;
+  dateIso?: string;
+  tags?: string[];
+  bodyHtml?: string;
+  related?: { label: string; title: string; href: string };
+}
+
+const { title, summary, section, date, dateIso, tags, bodyHtml, related } =
+  Astro.props;
+const backPath = section === 'Projects' ? '/projects' : '/blog';
+---
+
+<BaseLayout title={`${title} | Paul Savvas`} description={summary}>
+  <main
+    class:list={[
+      'site-frame page-shell entry-page',
+      { 'journal-entry': section === 'Blog' },
+    ]}
+  >
+    <a class="site-btn back-link" href={backPath}
+      ><UiIcon name="back" /> Back to {section}</a
+    >
+
+    <article class="glass-panel entry-sheet">
+      <header class="entry-header">
+        {
+          date &&
+            (dateIso ? (
+              <time class="section-label" datetime={dateIso}>
+                {date}
+              </time>
+            ) : (
+              <p class="section-label">{date}</p>
+            ))
+        }
+        <h1 class="display-heading">{title}</h1>
+        <p class="entry-summary">{summary}</p>
+        {
+          tags && tags.length > 0 && (
+            <ul class="tag-row" aria-label="Tags">
+              {tags.map((tag) => (
+                <li class="tag">{tag}</li>
+              ))}
+            </ul>
+          )
+        }
+        <slot />
+      </header>
+      {
+        bodyHtml && (
+          <div class="prose reading-prose entry-copy" set:html={bodyHtml} />
+        )
+      }
+    </article>
+
+    {
+      related && (
+        <aside>
+          <a href={related.href} class="glass-panel related-entry">
+            <span class="tile-icon">
+              <UiIcon name={section === 'Projects' ? 'blog' : 'projects'} />
+            </span>
+            <div>
+              <p class="section-label">{related.label}</p>
+              <p>{related.title}</p>
+            </div>
+            <span class="tile-arrow">
+              <UiIcon name="arrow" />
+            </span>
+          </a>
+        </aside>
+      )
+    }
+  </main>
+</BaseLayout>

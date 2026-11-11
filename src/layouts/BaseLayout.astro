@@ -1,7 +1,11 @@
 ---
 import '../styles/globals.css';
+import '../styles/site.css';
 import Analytics from '@vercel/analytics/astro';
 import SiteBanners from '../components/SiteBanners.astro';
+import ThemePreference from '../components/ThemePreference.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import UiIcon from '../components/UiIcon.astro';
 
 interface Props {
   title: string;
@@ -13,18 +17,18 @@ const {
   description = 'Paul Savvas — student engineer building practical tools across software, hardware, and 3D design.',
 } = Astro.props;
 
-const siteUrl = 'https://paulsavvas.com';
 const fullTitle = title.includes('Paul Savvas')
   ? title
   : `${title} | Paul Savvas`;
-
+const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isHome = currentPath === '/';
 const navEntries = [
-  { label: 'Home', path: '/' },
-  { label: 'About', path: '/about' },
-  { label: 'Projects', path: '/projects' },
-  { label: 'Blog', path: '/blog' },
-  { label: 'Contact', path: '/contact' },
-];
+  { label: 'Home', path: '/', icon: 'home' },
+  { label: 'About', path: '/about', icon: 'person' },
+  { label: 'Projects', path: '/projects', icon: 'projects' },
+  { label: 'Blog', path: '/blog', icon: 'blog' },
+  { label: 'Contact', path: '/contact', icon: 'mail' },
+] as const;
 
 const currentYear = new Date().getFullYear();
 ---
@@ -32,385 +36,86 @@ const currentYear = new Date().getFullYear();
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-
-    <!-- OpenGraph -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={siteUrl} />
+    <meta property="og:url" content="https://paulsavvas.com" />
     <meta property="og:site_name" content="Paul Savvas" />
-
-    <!-- Twitter card -->
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
-
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-
+    <ThemePreference />
     <Analytics />
-
-    {/* Inline theme initialisation — runs before paint to avoid flash */}
-    <script is:inline>
-      (function applyStoredTheme() {
-        var stored = localStorage.getItem('ps-theme');
-        var prefersDark = window.matchMedia(
-          '(prefers-color-scheme: dark)'
-        ).matches;
-        var useDark = stored === 'dark' || (stored !== 'light' && prefersDark);
-        document.documentElement.classList.toggle('dark', useDark);
-      })();
-
-      // Navbar entrance animation — only on first site load in this session
-      (function navbarEntrance() {
-        if (!sessionStorage.getItem('ps-visited')) {
-          document.documentElement.classList.add('navbar-animate');
-          sessionStorage.setItem('ps-visited', '1');
-        }
-      })();
-    </script>
   </head>
 
-  <body>
-    {/* ── Site banners (above the navbar, full width) ── */}
+  <body class:list={['public-site', { 'home-site': isHome }]}>
+    <a class="skip-link" href="#site-content">Skip to content</a>
     <SiteBanners />
 
-    {/* ── Navbar ── */}
-    <header
-      id="ps-navbar"
-      class="sticky top-0 z-50 border-b border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/80 backdrop-blur transition-colors"
-    >
-      <nav
-        class="mx-auto grid max-w-6xl grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3 sm:px-6 md:grid-cols-3 md:gap-y-0 md:py-0 md:h-14"
-      >
-        {/* Brand */}
-        <div class="flex items-center">
-          <a
-            href="/"
-            id="ps-navbar-brand"
-            class="inline-flex h-10 md:h-8 items-center text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100 transition-colors shrink-0 leading-none"
-          >
-            PS
+    <div class="site-stage">
+      <header class="site-toolbar">
+        <div class="site-frame toolbar-inner">
+          <a href="/" class="wordmark">
+            <span class="brand-mark" aria-hidden="true">PS</span>
+            <span>Paul Savvas</span>
           </a>
-        </div>
+          <nav class="site-dock" aria-label="Main navigation">
+            <ul>
+              {
+                navEntries.map(({ label, path, icon }) => {
+                  const current = currentPath === path;
+                  const active =
+                    current ||
+                    (path !== '/' && currentPath.startsWith(`${path}/`));
 
-        {/* Mobile controls */}
-        <div class="flex items-center justify-end gap-1 md:hidden">
-          <div id="ps-navbar-theme" class="inline-flex h-10 items-center">
-            <button
-              data-theme-toggle
-              type="button"
-              aria-label="Toggle colour theme"
-              class="rounded-lg p-2 transition-all duration-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:scale-110"
-            >
-              <svg
-                class="h-5 w-5 text-neutral-700 dark:text-neutral-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <!-- Sun icon (light mode) -->
-                <path
-                  data-theme-icon="light"
-                  class="hidden"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                ></path>
-                <!-- Moon icon (dark mode) -->
-                <path
-                  data-theme-icon="dark"
-                  class="hidden"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                ></path>
-                <!-- Computer icon (system mode) -->
-                <path
-                  data-theme-icon="system"
-                  class="hidden"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                ></path>
-              </svg>
-            </button>
-          </div>
-
-          <button
-            id="ps-mobile-menu-btn"
-            type="button"
-            aria-label="Open navigation menu"
-            aria-controls="ps-mobile-menu"
-            aria-expanded="false"
-            class="inline-flex h-10 w-10 items-center justify-center rounded-lg p-2 transition-colors hover:bg-neutral-100 dark:hover:bg-neutral-800"
-          >
-            <svg
-              class="h-5 w-5 text-neutral-700 dark:text-neutral-300"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                data-menu-icon="open"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"></path>
-              <path
-                data-menu-icon="close"
-                class="hidden"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 6l12 12M18 6 6 18"></path>
-            </svg>
-          </button>
-        </div>
-
-        {/* Navigation links */}
-        <div
-          id="ps-navbar-links"
-          class="hidden md:col-span-1 md:col-start-2 md:flex items-center justify-center md:justify-center"
-        >
-          <ul
-            class="flex w-full flex-wrap items-center justify-center gap-x-4 gap-y-1 md:w-auto md:flex-nowrap md:gap-6"
-          >
-            {
-              navEntries.map((entry) => (
-                <li class="flex">
-                  <a
-                    href={entry.path}
-                    class="inline-flex h-10 md:h-8 items-center text-sm font-medium text-neutral-600 dark:text-neutral-400 transition-colors hover:text-neutral-900 dark:hover:text-neutral-100 leading-none"
-                  >
-                    {entry.label}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-
-        {/* Theme toggle */}
-        <div
-          class="hidden md:row-start-1 md:col-start-3 md:flex items-center justify-end md:row-auto md:col-start-3"
-        >
-          <div
-            id="ps-navbar-theme"
-            class="inline-flex h-10 md:h-8 items-center"
-          >
-            <button
-              data-theme-toggle
-              type="button"
-              aria-label="Toggle colour theme"
-              class="rounded-lg p-2 transition-all duration-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:scale-110"
-            >
-              <svg
-                class="h-5 w-5 text-neutral-700 dark:text-neutral-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <!-- Sun icon (light mode) -->
-                <path
-                  data-theme-icon="light"
-                  class="hidden"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                ></path>
-                <!-- Moon icon (dark mode) -->
-                <path
-                  data-theme-icon="dark"
-                  class="hidden"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                ></path>
-                <!-- Computer icon (system mode) -->
-                <path
-                  data-theme-icon="system"
-                  class="hidden"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                ></path>
-              </svg>
-            </button>
+                  return (
+                    <li>
+                      <a
+                        href={path}
+                        aria-current={
+                          current ? 'page' : active ? 'location' : undefined
+                        }
+                      >
+                        <UiIcon name={icon} />
+                        <span>{label}</span>
+                      </a>
+                    </li>
+                  );
+                })
+              }
+            </ul>
+          </nav>
+          <div class="toolbar-controls">
+            <slot name="toolbar" />
+            <ThemeToggle />
           </div>
         </div>
-      </nav>
+      </header>
 
-      <div
-        id="ps-mobile-menu"
-        class="max-h-0 overflow-hidden border-t border-neutral-200 bg-white px-4 transition-all duration-300 ease-out dark:border-neutral-800 dark:bg-neutral-950 md:hidden"
-        aria-hidden="true"
-      >
-        <div class="mx-auto flex max-w-6xl flex-col gap-4 py-4">
-          <ul class="flex flex-col gap-1">
-            {
-              navEntries.map((entry) => (
-                <li>
-                  <a
-                    href={entry.path}
-                    class="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
-                  >
-                    {entry.label}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
+      <div class="site-content" id="site-content" tabindex="-1">
+        <slot />
       </div>
-    </header>
+    </div>
 
-    {/* ── Page content ── */}
-    <slot />
-
-    {/* ── Footer ── */}
-    <footer
-      class="w-full border-t border-gray-200 dark:border-neutral-800 transition-colors"
-    >
-      <div
-        class="mx-auto max-w-7xl px-6 py-6 flex w-full items-center justify-between gap-3 text-sm text-gray-500 dark:text-neutral-400"
-      >
+    <footer class="site-footer">
+      <div class="site-frame footer-inner">
         <span>&copy; {currentYear} Paul Savvas. All rights reserved.</span>
-        <div class="flex items-center gap-3">
-          <a
-            href="https://astro.build"
-            class="hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Built with Astro
-          </a>
-        </div>
+        <a
+          class="text-link"
+          href="https://astro.build"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Built with Astro <UiIcon name="external" />
+        </a>
       </div>
     </footer>
-
-    {/* Theme-toggle behaviour */}
-    <script is:inline>
-      (function setupThemeToggle() {
-        var modes = ['light', 'dark', 'system'];
-
-        function currentMode() {
-          return localStorage.getItem('ps-theme') || 'system';
-        }
-
-        function applyMode(mode) {
-          var prefersDark = window.matchMedia(
-            '(prefers-color-scheme: dark)'
-          ).matches;
-          var shouldBeDark =
-            mode === 'dark' || (mode === 'system' && prefersDark);
-          document.documentElement.classList.toggle('dark', shouldBeDark);
-        }
-
-        function refreshIcon() {
-          var mode = currentMode();
-          var icons = document.querySelectorAll('[data-theme-icon]');
-
-          icons.forEach(function (icon) {
-            icon.classList.add('hidden');
-          });
-
-          var activeIcons = document.querySelectorAll(
-            '[data-theme-icon="' + mode + '"]'
-          );
-          activeIcons.forEach(function (icon) {
-            icon.classList.remove('hidden');
-          });
-        }
-
-        var themeButtons = document.querySelectorAll('[data-theme-toggle]');
-        themeButtons.forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            var idx = modes.indexOf(currentMode());
-            var next = modes[(idx + 1) % modes.length];
-            localStorage.setItem('ps-theme', next);
-            applyMode(next);
-            refreshIcon();
-          });
-        });
-
-        // React to OS-level changes when mode is "system"
-        window
-          .matchMedia('(prefers-color-scheme: dark)')
-          .addEventListener('change', function () {
-            applyMode(currentMode());
-          });
-
-        applyMode(currentMode());
-        refreshIcon();
-        window.requestAnimationFrame(() => {
-          document.documentElement.classList.add('theme-transitions');
-        });
-      })();
-
-      (function setupMobileMenu() {
-        var menuButton = document.getElementById('ps-mobile-menu-btn');
-        var menuPanel = document.getElementById('ps-mobile-menu');
-
-        if (!menuButton || !menuPanel) {
-          return;
-        }
-
-        var openIcon = menuButton.querySelector('[data-menu-icon="open"]');
-        var closeIcon = menuButton.querySelector('[data-menu-icon="close"]');
-        var menuLinks = menuPanel.querySelectorAll('a');
-
-        function setMenuOpen(isOpen) {
-          menuButton.setAttribute('aria-expanded', String(isOpen));
-          menuButton.setAttribute(
-            'aria-label',
-            isOpen ? 'Close navigation menu' : 'Open navigation menu'
-          );
-          menuPanel.setAttribute('aria-hidden', String(!isOpen));
-          menuPanel.classList.toggle('max-h-0', !isOpen);
-          menuPanel.classList.toggle('opacity-0', !isOpen);
-          menuPanel.classList.toggle('pointer-events-none', !isOpen);
-          menuPanel.classList.toggle('max-h-96', isOpen);
-          menuPanel.classList.toggle('opacity-100', isOpen);
-          menuPanel.classList.toggle('pointer-events-auto', isOpen);
-
-          if (openIcon) {
-            openIcon.classList.toggle('hidden', isOpen);
-          }
-
-          if (closeIcon) {
-            closeIcon.classList.toggle('hidden', !isOpen);
-          }
-        }
-
-        setMenuOpen(false);
-
-        menuButton.addEventListener('click', function () {
-          var isOpen = menuButton.getAttribute('aria-expanded') === 'true';
-          setMenuOpen(!isOpen);
-        });
-
-        menuLinks.forEach(function (link) {
-          link.addEventListener('click', function () {
-            setMenuOpen(false);
-          });
-        });
-
-        document.addEventListener('keydown', function (event) {
-          if (event.key === 'Escape') {
-            setMenuOpen(false);
-          }
-        });
-      })();
-    </script>
   </body>
 </html>

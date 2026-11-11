@@ -1,0 +1,20 @@
+---
+interface Props {
+  label: string;
+  heading: string;
+}
+
+const { label, heading } = Astro.props;
+---
+
+<header class="page-masthead">
+  <p class="section-label">{label}</p>
+  <h1 class="display-heading">{heading}</h1>
+  {
+    Astro.slots.has('default') && (
+      <div class="masthead-copy">
+        <slot />
+      </div>
+    )
+  }
+</header>

@@ -1,0 +1,141 @@
+/* Keep the existing editor utilities on the same color scale. */
+.admin-site {
+  --color-neutral-50: #f0f5fe;
+  --color-neutral-100: #e6edfa;
+  --color-neutral-200: #cfdbed;
+  --color-neutral-300: #c0cce1;
+  --color-neutral-400: #a9bad5;
+  --color-neutral-500: #617492;
+  --color-neutral-600: #4b5e7b;
+  --color-neutral-700: #354963;
+  --color-neutral-800: #293a55;
+  --color-neutral-900: #182438;
+  --color-neutral-950: #10192b;
+  min-height: 100svh;
+  background:
+    radial-gradient(
+      ellipse 65rem 40rem at top left,
+      var(--sky-wash),
+      transparent 73%
+    ),
+    radial-gradient(
+      ellipse 40rem 45rem at 100% 15%,
+      var(--lilac-wash),
+      transparent 70%
+    ),
+    var(--background);
+}
+
+.admin-layout {
+  display: grid;
+  width: min(88rem, calc(100% - 2 * var(--gutter)));
+  grid-template-columns: minmax(0, 12.5rem) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(1.05rem, 3vw, 2.5rem);
+  padding-block: clamp(1rem, 3vw, 2.75rem);
+}
+
+.admin-sidebar {
+  position: sticky;
+  top: 1.2rem;
+  padding: 0.85rem;
+}
+.admin-toolbar,
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.admin-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  color: var(--muted);
+  font-size: 0.81rem;
+  font-weight: 650;
+}
+.admin-view:hover {
+  color: var(--accent-hover);
+}
+.admin-view svg {
+  width: 0.9em;
+  height: 0.9em;
+}
+
+.admin-nav ul {
+  display: grid;
+  gap: 0.2rem;
+  padding-block: 0.85rem;
+}
+
+.admin-nav a {
+  display: flex;
+  min-height: 2.6rem;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  color: var(--body-text);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.admin-nav a:hover {
+  background: var(--glass-strong);
+  color: var(--foreground);
+}
+.admin-nav a[aria-current] {
+  background: var(--accent-tint);
+  color: var(--accent-hover);
+}
+.admin-actions {
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--glass-edge);
+}
+
+.admin-main {
+  min-width: 0;
+}
+.admin-main :is(h1, h2, h3) {
+  font-family: var(--display-font);
+}
+.admin-login {
+  display: grid;
+  min-height: 100svh;
+  align-items: center;
+  padding-block: 1.5rem;
+}
+.login-card {
+  padding: clamp(1.3rem, 4.5vw, 2.2rem);
+}
+.login-card .brand-mark {
+  margin-bottom: 1.1rem;
+}
+.login-card h1 {
+  font-size: 2.4rem;
+  font-weight: 650;
+  letter-spacing: -0.055em;
+  line-height: 1.05;
+}
+.login-card input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.admin-main .site-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 52rem) {
+  .admin-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-sidebar {
+    position: static;
+  }
+  .admin-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
