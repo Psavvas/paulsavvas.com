@@ -12,6 +12,8 @@ bun dev
 
 Then open <http://localhost:4321>. The admin portal is at <http://localhost:4321/admin>.
 
+The homepage skyline loop uses [Manhattan waterfront footage by Sarowar Hussain](https://www.pexels.com/video/time-lapse-video-of-cityscape-during-nighttime-5545407/) under the [Pexels License](https://www.pexels.com/license/).
+
 ## Database
 
 Content and admin accounts both live in a [Neon](https://console.neon.tech) Postgres database. Put its **connection string** in `DATABASE_URL` (locally in `.env`, and on Vercel under _Settings → Environment Variables_), and set `BETTER_AUTH_SECRET` to a long random value (`openssl rand -base64 32`) in the same places.

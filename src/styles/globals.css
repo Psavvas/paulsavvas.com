@@ -3,6 +3,14 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/instrument-sans-latin.woff2') format('woff2');
+}
+
 :root {
   color-scheme: light;
   --background: #edf2fa;
@@ -19,7 +27,9 @@
   --on-accent: #fff;
   --glass: rgb(255 255 255 / 0.54);
   --glass-strong: rgb(248 251 255 / 0.82);
-  --dock-glass: rgb(244 249 255 / 0.72);
+  --dock-glass: rgb(236 246 255 / 0.68);
+  --dock-rim: rgb(255 255 255 / 0.8);
+  --dock-glint: rgb(255 255 255 / 0.66);
   --glass-highlight: rgb(255 255 255 / 0.9);
   --glass-edge: rgb(55 85 130 / 0.16);
   --glass-shadow: rgb(54 76 118 / 0.12);
@@ -48,7 +58,9 @@ html.dark {
   --on-accent: #122949;
   --glass: rgb(34 48 74 / 0.55);
   --glass-strong: rgb(18 29 49 / 0.86);
-  --dock-glass: rgb(18 29 49 / 0.84);
+  --dock-glass: rgb(13 23 41 / 0.74);
+  --dock-rim: rgb(204 226 255 / 0.43);
+  --dock-glint: rgb(204 226 255 / 0.2);
   --glass-highlight: rgb(204 226 255 / 0.22);
   --glass-edge: rgb(172 204 249 / 0.2);
   --glass-shadow: rgb(0 0 0 / 0.26);
@@ -137,7 +149,9 @@ canvas {
 .icon-control {
   color: inherit;
   cursor: pointer;
-  transition: background-color 180ms;
+  transition:
+    background-color 140ms,
+    box-shadow 140ms;
 }
 .icon-control:hover {
   background: var(--surface-muted);
@@ -177,9 +191,9 @@ canvas {
   text-align: center;
   cursor: pointer;
   transition:
-    background-color 180ms,
-    color 180ms,
-    translate 180ms;
+    background-color 140ms,
+    color 140ms,
+    box-shadow 140ms;
 }
 
 .site-btn:hover,
@@ -207,9 +221,20 @@ canvas {
   color: var(--on-accent);
 }
 
+.site-btn:not(:disabled):active,
+.icon-control:active {
+  box-shadow: inset 0 2px 5px rgb(13 23 41 / 0.24);
+}
+
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .hover-lift:not(:disabled):hover {
-    translate: 0 -1px;
+  .site-btn svg {
+    transition: translate 140ms ease-out;
+  }
+  .site-btn:not(:disabled):hover svg {
+    translate: 2px 0;
+  }
+  .site-btn:not(:disabled):active svg {
+    translate: 0 0;
   }
 }
 

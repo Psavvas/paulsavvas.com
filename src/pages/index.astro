@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroMedia from '../components/HeroMedia.astro';
 import UiIcon from '../components/UiIcon.astro';
 import {
   getLatestProject,
@@ -61,16 +62,6 @@ const recent = [
 
   <main class="home-page">
     <section class="home-hero" aria-labelledby="home-title">
-      <picture class="home-wallpaper">
-        <source media="(max-width: 44rem)" srcset="/blue-hour-mobile.webp" />
-        <img
-          src="/blue-hour.webp"
-          alt=""
-          width="1600"
-          height="900"
-          fetchpriority="high"
-        />
-      </picture>
       <div class="home-hero-copy">
         <h1 id="home-title">Paul Savvas</h1>
         <p>Student, Engineer, Developer and Leader</p>
@@ -81,6 +72,7 @@ const recent = [
           <a class="site-btn hero-secondary" href="/about">About me</a>
         </div>
       </div>
+      <HeroMedia />
     </section>
 
     <div class="site-frame home-details">

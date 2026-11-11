@@ -1,7 +1,6 @@
 ---
 import '../styles/globals.css';
 import '../styles/admin.css';
-import SiteFonts from '../components/SiteFonts.astro';
 import ThemePreference from '../components/ThemePreference.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import UiIcon from '../components/UiIcon.astro';
@@ -33,7 +32,6 @@ const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
     <meta name="robots" content="noindex, nofollow" />
     <title>{title} | Site Admin</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <SiteFonts />
     <ThemePreference />
   </head>
 

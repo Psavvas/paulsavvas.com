@@ -1,0 +1,129 @@
+---
+import UiIcon from './UiIcon.astro';
+---
+
+<picture class="home-wallpaper">
+  <source media="(max-width: 44rem)" srcset="/skyline-mobile.webp" />
+  <img
+    src="/skyline.webp"
+    alt=""
+    width="960"
+    height="540"
+    fetchpriority="high"
+  />
+</picture>
+<video
+  class="home-video"
+  data-hero-video
+  data-desktop-src="/skyline.mp4"
+  data-mobile-src="/skyline-mobile.mp4"
+  muted
+  playsinline
+  loop
+  preload="none"
+  aria-hidden="true"></video>
+<button
+  class="icon-control hero-video-toggle"
+  type="button"
+  data-hero-video-toggle
+  aria-label="Play background video"
+  hidden
+>
+  <span data-play-icon><UiIcon name="play" /></span>
+  <span data-pause-icon><UiIcon name="pause" /></span>
+</button>
+
+<script>
+  const video = document.querySelector<HTMLVideoElement>('[data-hero-video]');
+  const toggle = document.querySelector<HTMLButtonElement>(
+    '[data-hero-video-toggle]'
+  );
+
+  if (video && toggle) setupHeroVideo(video, toggle);
+
+  function setupHeroVideo(video: HTMLVideoElement, toggle: HTMLButtonElement) {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const compact = window.matchMedia('(max-width: 44rem)');
+    const connection = (
+      navigator as Navigator & { connection?: { saveData?: boolean } }
+    ).connection;
+    let playRequested = !reducedMotion.matches && !connection?.saveData;
+    let inView = false;
+    let pageLoaded = false;
+
+    function syncPlayback() {
+      toggle.toggleAttribute('data-play-requested', playRequested);
+      toggle.setAttribute(
+        'aria-label',
+        playRequested ? 'Pause background video' : 'Play background video'
+      );
+
+      if (!playRequested || !pageLoaded || !inView || document.hidden) {
+        video.pause();
+        return;
+      }
+
+      const source = compact.matches
+        ? video.dataset.mobileSrc
+        : video.dataset.desktopSrc;
+      if (!source) return;
+
+      if (video.getAttribute('src') !== source) {
+        video.removeAttribute('data-video-ready');
+        video.src = source;
+      }
+
+      if (video.paused) {
+        video.play().catch((error: DOMException) => {
+          if (error.name === 'AbortError') return;
+          playRequested = false;
+          syncPlayback();
+        });
+      }
+    }
+
+    toggle.hidden = false;
+    syncPlayback();
+    toggle.addEventListener('click', () => {
+      playRequested = !playRequested;
+      pageLoaded = true;
+      syncPlayback();
+    });
+    video.addEventListener('playing', () =>
+      video.setAttribute('data-video-ready', '')
+    );
+    video.addEventListener('error', () => {
+      video.removeAttribute('data-video-ready');
+      toggle.hidden = true;
+    });
+    document.addEventListener('visibilitychange', syncPlayback);
+    compact.addEventListener('change', syncPlayback);
+    reducedMotion.addEventListener('change', () => {
+      if (reducedMotion.matches) playRequested = false;
+      syncPlayback();
+    });
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.intersectionRatio >= 0.15;
+        syncPlayback();
+      },
+      { threshold: 0.15 }
+    );
+    observer.observe(video);
+
+    function enableAfterPaint() {
+      const enable = () => {
+        pageLoaded = true;
+        syncPlayback();
+      };
+
+      if ('requestIdleCallback' in window)
+        window.requestIdleCallback(enable, { timeout: 600 });
+      else setTimeout(enable, 100);
+    }
+
+    if (document.readyState === 'complete') enableAfterPaint();
+    else window.addEventListener('load', enableAfterPaint, { once: true });
+  }
+</script>

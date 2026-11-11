@@ -3,7 +3,6 @@ import '../styles/globals.css';
 import '../styles/site.css';
 import Analytics from '@vercel/analytics/astro';
 import SiteBanners from '../components/SiteBanners.astro';
-import SiteFonts from '../components/SiteFonts.astro';
 import ThemePreference from '../components/ThemePreference.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import UiIcon from '../components/UiIcon.astro';
@@ -52,7 +51,6 @@ const currentYear = new Date().getFullYear();
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <SiteFonts />
     <ThemePreference />
     <Analytics />
   </head>
