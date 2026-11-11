@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHeader from '../../components/PageHeader.astro';
+import ProjectTile from '../../components/ProjectTile.astro';
 import SearchBar from '../../components/SearchBar.astro';
 import UiIcon from '../../components/UiIcon.astro';
 import {
@@ -9,16 +10,15 @@ import {
   getPublishedProjects,
 } from '../../lib/projects';
 
-const pageTitle = 'Projects | Paul Savvas';
-const pageDesc =
-  'Projects by Paul Savvas — a selection of work across software, hardware, and 3D design.';
-
 const projects = (await getPublishedProjects()).map((project) => {
   const year = formatProjectYear(project.year);
 
   return {
-    ...project,
+    title: project.title,
+    summary: project.summary,
+    tags: project.tags,
     year,
+    featured: project.featured,
     destination: getProjectDestination(project),
     searchText: [
       project.title,
@@ -35,8 +35,11 @@ const projects = (await getPublishedProjects()).map((project) => {
 const featured = projects.filter((project) => project.featured);
 ---
 
-<BaseLayout title={pageTitle} description={pageDesc}>
-  <main class="site-frame page-shell">
+<BaseLayout
+  title="Projects | Paul Savvas"
+  description="Projects by Paul Savvas — a selection of work across software, hardware, and 3D design."
+>
+  <main class="site-frame page-shell projects-page">
     <PageHeader label="Projects" heading="Simple. Practical. Impactful.">
       <p>
         A growing collection of software, hardware, and 3D design work. I'm
@@ -44,26 +47,6 @@ const featured = projects.filter((project) => project.featured);
         in small, everyday ways or larger initiatives—while staying grounded in
         real constraints and performing well in practice.
       </p>
-      <Fragment slot="actions">
-        <a
-          class="site-btn"
-          href="https://github.com/psavvas"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Browse all code projects on GitHub <UiIcon name="external" />
-        </a>
-        <a
-          class="site-btn"
-          href="https://www.thingiverse.com/psavvas"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Browse all 3D design projects on Thingiverse <UiIcon
-            name="external"
-          />
-        </a>
-      </Fragment>
     </PageHeader>
 
     {
@@ -75,113 +58,90 @@ const featured = projects.filter((project) => project.featured);
             </h2>
             <p>A few of my most impactful, noteworthy or favorite projects.</p>
           </div>
-          <div class="featured-grid">
-            {featured.map(({ title, year, summary, tags, destination }) => (
-              <article class="featured-project">
-                {year && <p class="section-label">{year}</p>}
-                <h3>{title}</h3>
-                <p>{summary}</p>
-                {tags.length > 0 && (
-                  <ul class="tag-row" aria-label="Tags">
-                    {tags.map((tag) => (
-                      <li class="tag">{tag}</li>
-                    ))}
-                  </ul>
-                )}
-                {destination && (
-                  <a
-                    class="text-link"
-                    href={destination.url}
-                    aria-label={`Learn more about ${title}`}
-                    {...(destination.external
-                      ? { target: '_blank', rel: 'noopener noreferrer' }
-                      : {})}
-                  >
-                    Learn More{' '}
-                    <UiIcon
-                      name={destination.external ? 'external' : 'arrow'}
-                    />
-                  </a>
-                )}
-              </article>
+          <ul class="project-gallery">
+            {featured.map((project) => (
+              <li>
+                <ProjectTile {...project} />
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       )
     }
 
     <section class="page-section" aria-labelledby="all-projects-title">
-      <div class="section-intro">
-        <h2 id="all-projects-title" class="section-heading">All projects</h2>
-        <p>A complete list of projects with links and quick context.</p>
-      </div>
-      <div class="archive-controls">
-        <SearchBar
-          targetId="project-list"
-          emptyId="project-empty"
-          countId="project-count"
-          label="Search projects"
-          placeholder="Search projects by name, summary, tag, or year…"
-        />
-        <p id="project-count" class="result-count" aria-live="polite"></p>
+      <div class="collection-header">
+        <div class="section-intro">
+          <h2 id="all-projects-title" class="section-heading">All projects</h2>
+          <p>A complete list of projects with links and quick context.</p>
+        </div>
+        <div class="archive-controls">
+          <SearchBar
+            targetId="project-list"
+            emptyId="project-empty"
+            countId="project-count"
+            label="Search projects"
+            placeholder="Search by name, summary, tag, or year"
+          />
+          <p id="project-count" class="result-count" aria-live="polite"></p>
+        </div>
       </div>
 
-      <ul id="project-list" class="archive-list">
+      <ul id="project-list" class="project-collection">
         {
-          projects.map(
-            ({ title, summary, year, tags, destination, searchText }) => (
-              <li class="archive-row" data-search={searchText}>
-                {year && <p class="archive-date">{year}</p>}
-                <div class="archive-copy">
-                  <h3>{title}</h3>
-                  <p>{summary}</p>
-                  {tags.length > 0 && (
-                    <ul class="tag-row" aria-label="Tags">
-                      {tags.map((tag) => (
-                        <li class="tag">{tag}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-                {destination && (
-                  <a
-                    class="text-link archive-action"
-                    href={destination.url}
-                    aria-label={`View ${title}`}
-                    {...(destination.external
-                      ? { target: '_blank', rel: 'noopener noreferrer' }
-                      : {})}
-                  >
-                    View{' '}
-                    <UiIcon
-                      name={destination.external ? 'external' : 'arrow'}
-                    />
-                  </a>
-                )}
-              </li>
-            )
-          )
+          projects.map((project) => (
+            <li data-search={project.searchText}>
+              <ProjectTile {...project} featured={false} />
+            </li>
+          ))
         }
       </ul>
       <div
         id="project-empty"
-        class:list={['empty-state', { hidden: projects.length > 0 }]}
+        class:list={[
+          'glass-panel empty-state',
+          { hidden: projects.length > 0 },
+        ]}
       >
         <h3>No projects found</h3>
         <p>No projects match your search. Try a different keyword.</p>
       </div>
+      <div class="action-row collection-links">
+        <a
+          class="site-btn"
+          href="https://github.com/psavvas"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Browse all code projects on GitHub <UiIcon name="external" /></a
+        >
+        <a
+          class="site-btn"
+          href="https://www.thingiverse.com/psavvas"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Browse all 3D design projects on Thingiverse <UiIcon
+            name="external"
+          /></a
+        >
+      </div>
     </section>
 
-    <section class="split-section">
+    <section class="glass-panel criteria-panel">
       <h2 class="section-heading">How I evaluate a project</h2>
       <ul class="criteria-list">
-        <li>Clarity: can someone understand the goal and approach quickly?</li>
         <li>
-          Constraints: does it work within real limits (time, materials,
+          <strong>Clarity:</strong> can someone understand the goal and approach quickly?
+        </li>
+        <li>
+          <strong>Constraints:</strong> does it work within real limits (time, materials,
           performance)?
         </li>
-        <li>Results: are outcomes measurable, testable, and repeatable?</li>
-        <li>Iteration: what changed after the first version shipped?</li>
+        <li>
+          <strong>Results:</strong> are outcomes measurable, testable, and repeatable?
+        </li>
+        <li>
+          <strong>Iteration:</strong> what changed after the first version shipped?
+        </li>
       </ul>
     </section>
   </main>

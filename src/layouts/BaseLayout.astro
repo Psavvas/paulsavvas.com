@@ -22,13 +22,14 @@ const fullTitle = title.includes('Paul Savvas')
   ? title
   : `${title} | Paul Savvas`;
 const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isHome = currentPath === '/';
 const navEntries = [
-  { label: 'Home', path: '/' },
-  { label: 'About', path: '/about' },
-  { label: 'Projects', path: '/projects' },
-  { label: 'Blog', path: '/blog' },
-  { label: 'Contact', path: '/contact' },
-];
+  { label: 'Home', path: '/', icon: 'home' },
+  { label: 'About', path: '/about', icon: 'person' },
+  { label: 'Projects', path: '/projects', icon: 'projects' },
+  { label: 'Blog', path: '/blog', icon: 'blog' },
+  { label: 'Contact', path: '/contact', icon: 'mail' },
+] as const;
 
 const currentYear = new Date().getFullYear();
 ---
@@ -36,7 +37,10 @@ const currentYear = new Date().getFullYear();
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <meta property="og:type" content="website" />
@@ -53,62 +57,53 @@ const currentYear = new Date().getFullYear();
     <Analytics />
   </head>
 
-  <body class="public-site">
+  <body class:list={['public-site', { 'home-site': isHome }]}>
     <a class="skip-link" href="#site-content">Skip to content</a>
     <SiteBanners />
 
-    <header class="site-header" data-site-header>
-      <div class="site-frame header-inner">
-        <a href="/" class="wordmark">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span>Paul Savvas</span>
-        </a>
-
-        <div class="header-controls">
-          <ThemeToggle />
-          <button
-            class="icon-control menu-toggle"
-            type="button"
-            aria-label="Open navigation menu"
-            aria-controls="site-navigation"
-            aria-expanded="false"
-            data-menu-toggle
-          >
-            <span class="menu-open-icon"><UiIcon name="menu" /></span>
-            <span class="menu-close-icon"><UiIcon name="close" /></span>
-          </button>
+    <div class="site-stage">
+      <header class="site-toolbar">
+        <div class="site-frame toolbar-inner">
+          <a href="/" class="wordmark">
+            <span class="brand-mark" aria-hidden="true">PS</span>
+            <span>Paul Savvas</span>
+          </a>
+          <div class="toolbar-controls">
+            <slot name="toolbar" />
+            <ThemeToggle />
+          </div>
         </div>
+      </header>
 
-        <nav class="site-nav" id="site-navigation" aria-label="Main navigation">
-          <ul>
-            {
-              navEntries.map(({ label, path }) => {
-                const current = currentPath === path;
-                const active =
-                  current ||
-                  (path !== '/' && currentPath.startsWith(`${path}/`));
+      <nav class="site-dock" aria-label="Main navigation">
+        <ul>
+          {
+            navEntries.map(({ label, path, icon }) => {
+              const current = currentPath === path;
+              const active =
+                current || (path !== '/' && currentPath.startsWith(`${path}/`));
 
-                return (
-                  <li>
-                    <a
-                      href={path}
-                      aria-current={
-                        current ? 'page' : active ? 'location' : undefined
-                      }
-                    >
-                      {label}
-                    </a>
-                  </li>
-                );
-              })
-            }
-          </ul>
-        </nav>
+              return (
+                <li>
+                  <a
+                    href={path}
+                    aria-current={
+                      current ? 'page' : active ? 'location' : undefined
+                    }
+                  >
+                    <UiIcon name={icon} />
+                    <span>{label}</span>
+                  </a>
+                </li>
+              );
+            })
+          }
+        </ul>
+      </nav>
+
+      <div class="site-content" id="site-content" tabindex="-1">
+        <slot />
       </div>
-    </header>
-
-    <div class="site-content" id="site-content" tabindex="-1">
-      <slot />
     </div>
 
     <footer class="site-footer">
@@ -126,30 +121,3 @@ const currentYear = new Date().getFullYear();
     </footer>
   </body>
 </html>
-
-<script>
-  const header = document.querySelector<HTMLElement>('[data-site-header]');
-  const menuToggle =
-    header?.querySelector<HTMLButtonElement>('[data-menu-toggle]');
-
-  if (header && menuToggle) {
-    const setMenu = (open: boolean) => {
-      header.toggleAttribute('data-menu-open', open);
-      menuToggle.setAttribute('aria-expanded', String(open));
-      menuToggle.setAttribute(
-        'aria-label',
-        open ? 'Close navigation menu' : 'Open navigation menu'
-      );
-    };
-
-    menuToggle.addEventListener('click', () =>
-      setMenu(!header.hasAttribute('data-menu-open'))
-    );
-    header.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && header.hasAttribute('data-menu-open')) {
-        setMenu(false);
-        menuToggle.focus();
-      }
-    });
-  }
-</script>

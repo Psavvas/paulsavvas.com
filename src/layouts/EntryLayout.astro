@@ -18,38 +18,50 @@ const backPath = section === 'Projects' ? '/projects' : '/blog';
 
 <BaseLayout title={`${title} | Paul Savvas`} description={summary}>
   <main class="site-frame page-shell entry-page">
-    <a class="text-link back-link" href={backPath}
+    <a class="site-btn back-link" href={backPath}
       ><UiIcon name="back" /> Back to {section}</a
     >
 
-    <header class="entry-header">
-      {date && <p class="section-label">{date}</p>}
-      <h1 class="display-heading">{title}</h1>
-      <p class="entry-summary">{summary}</p>
+    <article class="glass-panel entry-sheet">
+      <header class="entry-header">
+        {date && <p class="section-label">{date}</p>}
+        <h1 class="display-heading">{title}</h1>
+        <p class="entry-summary">{summary}</p>
+        {
+          tags && tags.length > 0 && (
+            <ul class="tag-row" aria-label="Tags">
+              {tags.map((tag) => (
+                <li class="tag">{tag}</li>
+              ))}
+            </ul>
+          )
+        }
+        <slot />
+      </header>
       {
-        tags && tags.length > 0 && (
-          <ul class="tag-row" aria-label="Tags">
-            {tags.map((tag) => (
-              <li class="tag">{tag}</li>
-            ))}
-          </ul>
+        bodyHtml && (
+          <div class="prose reading-prose entry-copy" set:html={bodyHtml} />
         )
       }
-      <slot />
-    </header>
+    </article>
 
-    <div class="entry-content">
-      {
-        related && (
-          <aside class="related-entry">
-            <p class="section-label">{related.label}</p>
-            <a href={related.href} class="text-link">
-              {related.title} <UiIcon name="arrow" />
-            </a>
-          </aside>
-        )
-      }
-      <article class="prose reading-prose" set:html={bodyHtml ?? ''} />
-    </div>
+    {
+      related && (
+        <aside>
+          <a href={related.href} class="glass-panel related-entry">
+            <span class="tile-icon">
+              <UiIcon name={section === 'Projects' ? 'blog' : 'projects'} />
+            </span>
+            <div>
+              <p class="section-label">{related.label}</p>
+              <p>{related.title}</p>
+            </div>
+            <span class="tile-arrow">
+              <UiIcon name="arrow" />
+            </span>
+          </a>
+        </aside>
+      )
+    }
   </main>
 </BaseLayout>

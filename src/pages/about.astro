@@ -3,39 +3,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PageHeader from '../components/PageHeader.astro';
 import { getAboutContentHtml } from '../lib/about-content';
 
-const pageTitle = 'About | Paul Savvas';
-const pageDesc =
-  'About Paul Savvas, student engineer building practical tools across software, hardware, and 3D design.';
-
 const content = await getAboutContentHtml();
+const sections = [
+  { heading: content.valuesHeading, html: content.valuesHtml },
+  { heading: content.workHeading, html: content.workHtml },
+  {
+    heading: content.nowHeading,
+    html: content.nowHtml,
+    links: content.linksHtml,
+  },
+];
 ---
 
-<BaseLayout title={pageTitle} description={pageDesc}>
-  <main class="site-frame page-shell">
+<BaseLayout
+  title="About | Paul Savvas"
+  description="About Paul Savvas, student engineer building practical tools across software, hardware, and 3D design."
+>
+  <main class="site-frame page-shell about-page">
     <PageHeader label={content.eyebrow} heading={content.heading} />
-    <div class="prose reading-prose about-intro" set:html={content.introHtml} />
+    <div class="about-intro prose reading-prose" set:html={content.introHtml} />
 
-    <div class="about-grid">
-      <section class="about-panel">
-        <h2 class="section-heading">{content.valuesHeading}</h2>
-        <div class="prose reading-prose" set:html={content.valuesHtml} />
-      </section>
-      <section class="about-panel">
-        <h2 class="section-heading">{content.workHeading}</h2>
-        <div class="prose reading-prose" set:html={content.workHtml} />
-      </section>
+    <div class="glass-panel about-sections">
+      {
+        sections.map(({ heading, html, links }) => (
+          <section class="about-section">
+            <h2 class="section-heading">{heading}</h2>
+            <div>
+              <div class="prose reading-prose" set:html={html} />
+              {links && <div class="action-row" set:html={links} />}
+            </div>
+          </section>
+        ))
+      }
     </div>
-
-    <section class="split-section">
-      <h2 class="section-heading">{content.nowHeading}</h2>
-      <div>
-        <div class="prose reading-prose" set:html={content.nowHtml} />
-        {
-          content.linksHtml && (
-            <div class="action-row" set:html={content.linksHtml} />
-          )
-        }
-      </div>
-    </section>
   </main>
 </BaseLayout>

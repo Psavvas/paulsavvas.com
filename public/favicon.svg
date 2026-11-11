@@ -1,5 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
-  <rect width="36" height="36" rx="9" fill="#2747d5"/>
-  <path fill="#fff" d="M9.7 22.9 23.4 9.9h2.2l-5 15.7h-3l2.4-7.6-7.4 6.5H9.7z"/>
-  <circle cx="20.5" cy="25" r="1.75" fill="#d9fc79"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <defs>
+    <linearGradient id="glass" x2="0" y2="1">
+      <stop stop-color="#e6f5ff"/>
+      <stop offset="1" stop-color="#9bbef8"/>
+    </linearGradient>
+  </defs>
+  <circle cx="20" cy="20" r="19" fill="url(#glass)" stroke="#e5efff"/>
+  <text x="20" y="25" fill="#19335a" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="14">PS</text>
 </svg>

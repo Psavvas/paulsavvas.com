@@ -1,0 +1,66 @@
+---
+import UiIcon from './UiIcon.astro';
+import type { ProjectDestination } from '../lib/projects';
+
+interface Props {
+  title: string;
+  summary: string;
+  year?: string;
+  tags: string[];
+  destination: ProjectDestination | null;
+  featured?: boolean;
+}
+
+const {
+  title,
+  summary,
+  year,
+  tags,
+  destination,
+  featured = false,
+} = Astro.props;
+---
+
+<div
+  class:list={[
+    'glass-panel project-tile',
+    { 'project-tile-featured': featured },
+  ]}
+>
+  <div class="project-tile-meta">
+    {
+      featured && (
+        <span class="tile-icon">
+          <UiIcon name="projects" />
+        </span>
+      )
+    }
+    {year && <p class="section-label">{year}</p>}
+  </div>
+  <h3>{title}</h3>
+  <p class="project-summary">{summary}</p>
+  {
+    tags.length > 0 && (
+      <ul class="tag-row" aria-label="Tags">
+        {tags.map((tag) => (
+          <li class="tag">{tag}</li>
+        ))}
+      </ul>
+    )
+  }
+  {
+    destination && (
+      <a
+        class="card-action"
+        href={destination.url}
+        aria-label={`${featured ? 'Learn more about' : 'View'} ${title}`}
+        {...(destination.external
+          ? { target: '_blank', rel: 'noopener noreferrer' }
+          : {})}
+      >
+        {featured ? 'Learn More' : 'View'}{' '}
+        <UiIcon name={destination.external ? 'external' : 'arrow'} />
+      </a>
+    )
+  }
+</div>

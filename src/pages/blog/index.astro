@@ -5,65 +5,70 @@ import SearchBar from '../../components/SearchBar.astro';
 import UiIcon from '../../components/UiIcon.astro';
 import { getPublishedBlogPosts } from '../../lib/blog';
 
-const pageTitle = 'Blog | Paul Savvas';
-const pageDesc =
-  'Blog posts by Paul Savvas — project notes, lessons learned, and build write-ups.';
-
 const posts = await getPublishedBlogPosts();
 ---
 
-<BaseLayout title={pageTitle} description={pageDesc}>
-  <main class="site-frame page-shell">
-    <PageHeader label="Blog" heading="Notes and write-ups">
-      <p>
-        Short posts about projects, engineering decisions, and what I learn
-        while building.
-      </p>
-    </PageHeader>
+<BaseLayout
+  title="Blog | Paul Savvas"
+  description="Blog posts by Paul Savvas — project notes, lessons learned, and build write-ups."
+>
+  <main class="site-frame page-shell journal-page">
+    <div class="journal-intro">
+      <PageHeader label="Blog" heading="Notes and write-ups">
+        <p>
+          Short posts about projects, engineering decisions, and what I learn
+          while building.
+        </p>
+      </PageHeader>
+      {
+        posts.length > 0 && (
+          <div class="archive-controls">
+            <SearchBar
+              targetId="blog-list"
+              emptyId="blog-empty"
+              countId="blog-count"
+              label="Search blog posts"
+              placeholder="Search posts"
+            />
+            <p id="blog-count" class="result-count" aria-live="polite" />
+          </div>
+        )
+      }
+    </div>
 
-    <section class="page-section" aria-label="Blog posts">
+    <section class="journal-feed" aria-label="Blog posts">
       {
         posts.length === 0 ? (
-          <div class="empty-state">
+          <div class="glass-panel empty-state">
             <h2>Coming soon</h2>
             <p>I'm working on the first set of posts now.</p>
           </div>
         ) : (
           <>
-            <div class="archive-controls">
-              <SearchBar
-                targetId="blog-list"
-                emptyId="blog-empty"
-                countId="blog-count"
-                label="Search blog posts"
-                placeholder="Search posts by title, summary, or tag…"
-              />
-              <p id="blog-count" class="result-count" aria-live="polite" />
-            </div>
-            <div id="blog-list" class="archive-list">
-              {posts.map(({ title, slug, date, summary, tags }) => (
+            <div id="blog-list" class="journal-list">
+              {posts.map(({ title, slug, date, dateIso, summary, tags }) => (
                 <article
-                  class="archive-row"
-                  data-search={[title, summary, ...(tags ?? [])]
+                  class="glass-panel journal-card"
+                  data-search={[title, summary, ...tags]
                     .join(' ')
                     .toLowerCase()}
                 >
-                  <p class="archive-date">{date}</p>
-                  <div class="archive-copy">
-                    <h2>
-                      <a href={`/blog/${slug}`}>{title}</a>
-                    </h2>
-                    <p>{summary}</p>
-                    {tags && tags.length > 0 && (
-                      <ul class="tag-row" aria-label="Tags">
-                        {tags.map((tag) => (
-                          <li class="tag">{tag}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                  {date && (
+                    <time class="section-label" datetime={dateIso}>
+                      {date}
+                    </time>
+                  )}
+                  <h2>{title}</h2>
+                  <p>{summary}</p>
+                  {tags.length > 0 && (
+                    <ul class="tag-row" aria-label="Tags">
+                      {tags.map((tag) => (
+                        <li class="tag">{tag}</li>
+                      ))}
+                    </ul>
+                  )}
                   <a
-                    class="text-link archive-action"
+                    class="card-action"
                     href={`/blog/${slug}`}
                     aria-label={`Read ${title}`}
                   >
@@ -72,7 +77,7 @@ const posts = await getPublishedBlogPosts();
                 </article>
               ))}
             </div>
-            <div id="blog-empty" class="empty-state hidden">
+            <div id="blog-empty" class="glass-panel empty-state hidden">
               <h2>No posts found</h2>
               <p>No posts match your search. Try a different keyword.</p>
             </div>

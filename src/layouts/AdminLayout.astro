@@ -38,14 +38,43 @@ const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
   </head>
 
   <body class="admin-site">
-    {
-      !bare && (
-        <header class="admin-header">
-          <div class="site-frame admin-toolbar">
-            <a class="wordmark" href="/admin">
-              <span class="brand-mark" aria-hidden="true" />
-              <span>PS Admin</span>
-            </a>
+    <div class:list={['site-frame', { 'admin-layout': !bare }]}>
+      {
+        !bare && (
+          <header class="glass-panel admin-sidebar">
+            <div class="admin-toolbar">
+              <a class="wordmark" href="/admin">
+                <span class="brand-mark" aria-hidden="true">
+                  PS
+                </span>
+                <span>PS Admin</span>
+              </a>
+              <ThemeToggle />
+            </div>
+
+            <nav class="admin-nav" aria-label="Admin navigation">
+              <ul>
+                {navEntries.map(({ label, path }) => {
+                  const current = currentPath === path;
+                  const active =
+                    current ||
+                    (path !== '/admin' && currentPath.startsWith(`${path}/`));
+                  return (
+                    <li>
+                      <a
+                        href={path}
+                        aria-current={
+                          current ? 'page' : active ? 'location' : undefined
+                        }
+                      >
+                        {label}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+
             <div class="admin-actions">
               <a
                 class="admin-view"
@@ -55,43 +84,19 @@ const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
               >
                 View site <UiIcon name="external" />
               </a>
-              <ThemeToggle />
               <form method="post" action="/admin/logout">
-                <button type="submit" class="site-btn">
+                <button type="submit" class="site-btn site-btn--sm">
                   Log out
                 </button>
               </form>
             </div>
-          </div>
-          <nav class="site-frame admin-nav" aria-label="Admin navigation">
-            <ul>
-              {navEntries.map(({ label, path }) => {
-                const current = currentPath === path;
-                const active =
-                  current ||
-                  (path !== '/admin' && currentPath.startsWith(`${path}/`));
+          </header>
+        )
+      }
 
-                return (
-                  <li>
-                    <a
-                      href={path}
-                      aria-current={
-                        current ? 'page' : active ? 'location' : undefined
-                      }
-                    >
-                      {label}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </header>
-      )
-    }
-
-    <main class:list={['site-frame admin-main', { 'admin-login': bare }]}>
-      <slot />
-    </main>
+      <main class:list={['admin-main', { 'admin-login': bare }]}>
+        <slot />
+      </main>
+    </div>
   </body>
 </html>

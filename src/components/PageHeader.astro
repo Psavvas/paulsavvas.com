@@ -17,11 +17,4 @@ const { label, heading } = Astro.props;
       </div>
     )
   }
-  {
-    Astro.slots.has('actions') && (
-      <div class="action-row masthead-actions">
-        <slot name="actions" />
-      </div>
-    )
-  }
 </header>

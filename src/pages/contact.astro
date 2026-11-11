@@ -5,14 +5,10 @@ import UiIcon from '../components/UiIcon.astro';
 
 export const prerender = false;
 
-const pageTitle = 'Contact | Paul Savvas';
-const pageDesc =
-  'Contact Paul Savvas — reach out about projects, collaboration, or questions.';
-
 const emailAddr = 'hello@paulsavvas.com';
 const formUrl = 'https://psavvas.notion.site/15770b9af471809da736d4e77a090ce0';
 
-const socialCards = [
+const profiles = [
   {
     heading: 'LinkedIn',
     blurb: 'Connect with me on LinkedIn.',
@@ -40,7 +36,10 @@ const socialCards = [
 ];
 ---
 
-<BaseLayout title={pageTitle} description={pageDesc}>
+<BaseLayout
+  title="Contact | Paul Savvas"
+  description="Contact Paul Savvas — reach out about projects, collaboration, or questions."
+>
   <main class="site-frame page-shell">
     <PageHeader label="Contact" heading="Let's connect.">
       <p>
@@ -49,47 +48,57 @@ const socialCards = [
       </p>
     </PageHeader>
 
-    <section class="contact-grid" aria-label="Ways to get in touch">
-      <div class="contact-panel">
-        <span class="contact-icon"><UiIcon name="file" /></span>
-        <h2 class="section-heading">Contact Form</h2>
-        <p>
-          Message me using the form below. I try to respond as soon as possible.
-        </p>
+    <section
+      class="glass-panel contact-methods"
+      aria-label="Ways to get in touch"
+    >
+      <article class="contact-method">
+        <span class="tile-icon"><UiIcon name="file" /></span>
+        <div>
+          <h2 class="section-heading">Contact Form</h2>
+          <p>
+            Message me using the form below. I try to respond as soon as
+            possible.
+          </p>
+          <p class="contact-address">paulsavvas.com/redirect/contact</p>
+        </div>
         <a class="site-btn site-btn--primary" href={formUrl}
           >Open form <UiIcon name="external" /></a
         >
-        <span class="contact-address">paulsavvas.com/redirect/contact</span>
-      </div>
-      <div class="contact-panel">
-        <span class="contact-icon"><UiIcon name="mail" /></span>
-        <h2 class="section-heading">Email</h2>
-        <p>
-          Contact me via email, and I'll make sure to try to respond within 3
-          business days.
-        </p>
+      </article>
+      <article class="contact-method">
+        <span class="tile-icon"><UiIcon name="mail" /></span>
+        <div>
+          <h2 class="section-heading">Email</h2>
+          <p>
+            Contact me via email, and I'll make sure to try to respond within 3
+            business days.
+          </p>
+          <p class="contact-address">{emailAddr}</p>
+        </div>
         <a class="site-btn" href={`mailto:${emailAddr}`}
           >Send email <UiIcon name="arrow" /></a
         >
-        <span class="contact-address">{emailAddr}</span>
-      </div>
+      </article>
     </section>
 
-    <section class="profile-grid" aria-label="Social profiles">
+    <section class="profile-shelf" aria-label="Social profiles">
       {
-        socialCards.map(({ heading, blurb, cta, href }) => (
-          <article class="profile-item">
+        profiles.map(({ heading, blurb, cta, href }) => (
+          <a
+            class="glass-panel profile-link"
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={cta}
+            aria-describedby={`profile-${heading}`}
+          >
             <h2>{heading}</h2>
-            <p>{blurb}</p>
-            <a
-              class="text-link"
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {cta} <UiIcon name="external" />
-            </a>
-          </article>
+            <span class="tile-arrow">
+              <UiIcon name="external" />
+            </span>
+            <p id={`profile-${heading}`}>{blurb}</p>
+          </a>
         ))
       }
     </section>
