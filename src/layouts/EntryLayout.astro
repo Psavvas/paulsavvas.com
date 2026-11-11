@@ -7,24 +7,40 @@ interface Props {
   summary: string;
   section: 'Projects' | 'Blog';
   date?: string;
+  dateIso?: string;
   tags?: string[];
   bodyHtml?: string;
   related?: { label: string; title: string; href: string };
 }
 
-const { title, summary, section, date, tags, bodyHtml, related } = Astro.props;
+const { title, summary, section, date, dateIso, tags, bodyHtml, related } =
+  Astro.props;
 const backPath = section === 'Projects' ? '/projects' : '/blog';
 ---
 
 <BaseLayout title={`${title} | Paul Savvas`} description={summary}>
-  <main class="site-frame page-shell entry-page">
+  <main
+    class:list={[
+      'site-frame page-shell entry-page',
+      { 'journal-entry': section === 'Blog' },
+    ]}
+  >
     <a class="site-btn back-link" href={backPath}
       ><UiIcon name="back" /> Back to {section}</a
     >
 
     <article class="glass-panel entry-sheet">
       <header class="entry-header">
-        {date && <p class="section-label">{date}</p>}
+        {
+          date &&
+            (dateIso ? (
+              <time class="section-label" datetime={dateIso}>
+                {date}
+              </time>
+            ) : (
+              <p class="section-label">{date}</p>
+            ))
+        }
         <h1 class="display-heading">{title}</h1>
         <p class="entry-summary">{summary}</p>
         {

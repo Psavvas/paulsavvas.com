@@ -13,7 +13,7 @@ const posts = await getPublishedBlogPosts();
   description="Blog posts by Paul Savvas — project notes, lessons learned, and build write-ups."
 >
   <main class="site-frame page-shell journal-page">
-    <div class="journal-intro">
+    <div class="collection-header journal-intro">
       <PageHeader label="Blog" heading="Notes and write-ups">
         <p>
           Short posts about projects, engineering decisions, and what I learn
@@ -46,36 +46,41 @@ const posts = await getPublishedBlogPosts();
         ) : (
           <>
             <div id="blog-list" class="journal-list">
-              {posts.map(({ title, slug, date, dateIso, summary, tags }) => (
-                <article
-                  class="glass-panel journal-card"
-                  data-search={[title, summary, ...tags]
-                    .join(' ')
-                    .toLowerCase()}
-                >
-                  {date && (
-                    <time class="section-label" datetime={dateIso}>
-                      {date}
-                    </time>
-                  )}
-                  <h2>{title}</h2>
-                  <p>{summary}</p>
-                  {tags.length > 0 && (
-                    <ul class="tag-row" aria-label="Tags">
-                      {tags.map((tag) => (
-                        <li class="tag">{tag}</li>
-                      ))}
-                    </ul>
-                  )}
-                  <a
-                    class="card-action"
-                    href={`/blog/${slug}`}
-                    aria-label={`Read ${title}`}
+              {posts.map(
+                ({ title, slug, date, dateIso, summary, tags }, index) => (
+                  <article
+                    class:list={[
+                      'journal-card',
+                      { 'glass-panel journal-featured': index === 0 },
+                    ]}
+                    data-search={[title, summary, ...tags]
+                      .join(' ')
+                      .toLowerCase()}
                   >
-                    Read post <UiIcon name="arrow" />
-                  </a>
-                </article>
-              ))}
+                    <a
+                      class="journal-link"
+                      href={`/blog/${slug}`}
+                      aria-labelledby={`post-title-${index}`}
+                    >
+                      {date && <time datetime={dateIso}>{date}</time>}
+                      <div class="journal-copy">
+                        <h2 id={`post-title-${index}`}>{title}</h2>
+                        {summary && <p>{summary}</p>}
+                        {tags.length > 0 && (
+                          <ul class="tag-row" aria-label="Tags">
+                            {tags.map((tag) => (
+                              <li class="tag">{tag}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      <span class="tile-arrow" aria-hidden="true">
+                        <UiIcon name="arrow" />
+                      </span>
+                    </a>
+                  </article>
+                )
+              )}
             </div>
             <div id="blog-empty" class="glass-panel empty-state hidden">
               <h2>No posts found</h2>

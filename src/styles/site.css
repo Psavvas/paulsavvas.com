@@ -70,9 +70,10 @@ html {
   background: var(--surface);
   box-shadow:
     inset 0 1px 1px var(--dock-rim),
-    inset 0 -1px 2px var(--dock-glint),
-    0 0.6rem 1.7rem var(--glass-shadow),
-    0 0.12rem 0.5rem var(--glass-shadow);
+    inset 0 -1px 2px var(--dock-rim),
+    inset 0 0 0 2px var(--dock-glint),
+    0 0.45rem 1.4rem var(--glass-shadow),
+    0 0.12rem 0.4rem var(--glass-shadow);
 }
 
 .site-dock ul {
@@ -108,17 +109,18 @@ html {
 }
 @media (hover: hover) {
   .site-dock a:not([aria-current]):hover {
-    background-color: var(--glass);
+    background-color: var(--glass-strong);
   }
 }
 .site-dock a[aria-current] {
   border-color: var(--dock-glint);
   background:
-    linear-gradient(168deg, var(--dock-glint), transparent 72%),
-    var(--accent-tint);
+    linear-gradient(165deg, var(--dock-glint), transparent 64%),
+    color-mix(in srgb, var(--accent-tint) 80%, transparent);
   box-shadow:
     inset 0 1px 2px var(--glass-highlight),
-    0 1px 4px var(--glass-shadow);
+    inset 0 -1px 1px var(--dock-glint),
+    0 2px 5px var(--glass-shadow);
   color: var(--accent-hover);
 }
 .site-dock a:active {
@@ -321,14 +323,18 @@ a.glass-panel:hover {
   --surface: #1a2739;
   --surface-muted: #30415a;
   --glass: rgb(255 255 255 / 0.13);
-  --glass-strong: rgb(25 37 55 / 0.82);
+  --glass-strong: rgb(32 46 65 / 0.76);
   --glass-highlight: rgb(212 228 255 / 0.24);
   --glass-edge: rgb(216 229 249 / 0.28);
-  --dock-glass: rgb(13 23 38 / 0.72);
-  --dock-rim: rgb(214 231 255 / 0.47);
-  --dock-glint: rgb(209 225 253 / 0.19);
-  background: rgb(9 16 27 / 0.69);
-  box-shadow: 0 1px rgb(221 233 255 / 0.18);
+  --dock-glass: rgb(13 23 38 / 0.67);
+  --dock-rim: rgb(226 239 255 / 0.54);
+  --dock-glint: rgb(209 225 253 / 0.14);
+  background: linear-gradient(
+    rgb(9 16 27 / 0.72),
+    rgb(9 16 27 / 0.64) 52%,
+    rgb(9 16 27 / 0.32)
+  );
+  box-shadow: 0 1px rgb(221 233 255 / 0.14);
   color: var(--foreground);
 }
 
@@ -371,7 +377,8 @@ a.glass-panel:hover {
 
 .hero-secondary {
   border-color: rgb(223 235 255 / 0.42);
-  background: rgb(17 30 51 / 0.7);
+  background: linear-gradient(160deg, rgb(219 233 255 / 0.14), transparent 72%)
+    rgb(17 30 51 / 0.72);
   color: #fff;
 }
 
@@ -418,9 +425,6 @@ a.glass-panel:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.home-video {
   opacity: 0;
   pointer-events: none;
 }
@@ -433,8 +437,12 @@ a.glass-panel:hover {
   top: calc(var(--toolbar-height) + 1rem);
   right: max(var(--gutter), (100% - 74rem) / 2);
   border-color: rgb(255 255 255 / 0.38);
-  background: rgb(16 25 38 / 0.76);
-  box-shadow: inset 0 1px rgb(255 255 255 / 0.23);
+  background: linear-gradient(155deg, rgb(223 236 255 / 0.18), transparent 75%)
+    rgb(16 25 38 / 0.69);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.36),
+    inset 0 -1px 1px rgb(223 236 255 / 0.15),
+    0 3px 12px rgb(4 10 19 / 0.22);
   color: #fff;
 }
 
@@ -619,8 +627,7 @@ a.glass-panel:hover {
   min-width: 0;
 }
 
-.project-tile,
-.journal-card {
+.project-tile {
   position: relative;
   display: flex;
   height: 100%;
@@ -648,13 +655,11 @@ a.glass-panel:hover {
 .project-tile-featured .project-tile-meta {
   margin-bottom: 0.28rem;
 }
-.project-tile h3,
-.journal-card h2 {
+.project-tile h3 {
   font-size: clamp(1.3rem, 2.5vw, 1.85rem);
   line-height: 1.14;
 }
-.project-summary,
-.journal-card > p {
+.project-summary {
   max-width: 65ch;
   color: var(--body-text);
   line-height: 1.55;
@@ -683,7 +688,7 @@ a.glass-panel:hover {
   text-underline-offset: 0.2em;
 }
 
-:is(.project-tile, .journal-card):has(.card-action:hover) {
+.project-tile:has(.card-action:is(:hover, :focus-visible)) {
   border-color: var(--line-strong);
 }
 
@@ -724,28 +729,125 @@ a.glass-panel:hover {
 }
 
 .journal-page {
-  display: grid;
-  grid-template-columns: minmax(0, 0.68fr) minmax(0, 1fr);
-  align-items: start;
-  gap: clamp(1.3rem, 6.2vw, 6.75rem);
+  max-width: 68rem;
 }
 
 .journal-intro {
-  position: sticky;
-  top: calc(var(--toolbar-height) + 0.75rem);
+  grid-template-columns: minmax(0, 1fr) minmax(13rem, 18rem);
+  gap: 1.25rem clamp(1.25rem, 5vw, 4.5rem);
+  margin-bottom: clamp(1.85rem, 4vw, 3rem);
 }
+
 .journal-intro .display-heading {
-  font-size: clamp(2.7rem, 5.4vw, 5rem);
+  font-size: clamp(2.55rem, 5.5vw, 4.85rem);
+  text-wrap: balance;
 }
+
 .journal-intro .archive-controls {
-  margin-top: 1.25rem;
+  position: relative;
 }
-.journal-list {
+
+.journal-intro .result-count {
+  position: absolute;
+}
+
+.journal-featured {
+  margin-bottom: clamp(0.7rem, 2vw, 1.45rem);
+  background:
+    radial-gradient(ellipse at 98% 0%, var(--sky-wash), transparent 64%),
+    radial-gradient(ellipse at 80% 100%, var(--lilac-wash), transparent 60%),
+    var(--surface);
+}
+
+.journal-card:not(.journal-featured) {
+  border-top: 1px solid var(--line);
+}
+
+.journal-link {
   display: grid;
-  gap: 0.9rem;
+  grid-template-columns: clamp(7.5rem, 16vw, 10rem) minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.55rem clamp(0.8rem, 3vw, 2rem);
+  padding: clamp(1rem, 2.5vw, 1.65rem) clamp(0.35rem, 1.5vw, 1rem);
+  border-radius: 0.8rem;
 }
-.journal-card {
-  padding: clamp(1.25rem, 3.7vw, 2.3rem);
+
+.journal-featured .journal-link {
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: clamp(0.65rem, 2vw, 1.2rem);
+  padding: clamp(1.15rem, 4vw, 2.75rem);
+  border-radius: inherit;
+}
+
+.journal-link time {
+  grid-column: 1;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+.journal-card:not(.journal-featured) time {
+  margin-top: 0.22rem;
+}
+
+.journal-copy {
+  grid-column: 2;
+}
+
+.journal-featured .journal-copy {
+  grid-column: 1;
+  max-width: 44rem;
+}
+
+.journal-link h2 {
+  font-size: clamp(1.25rem, 2.5vw, 1.8rem);
+  letter-spacing: -0.036em;
+  line-height: 1.13;
+}
+
+.journal-featured h2 {
+  font-size: clamp(1.8rem, 4.2vw, 3.55rem);
+  text-wrap: pretty;
+}
+
+.journal-copy p {
+  max-width: 65ch;
+  margin-top: 0.5rem;
+  color: var(--body-text);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.journal-copy .tag-row {
+  margin-top: 0.65rem;
+}
+
+.journal-link .tile-arrow {
+  grid-column: -2;
+  grid-row: 1;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+}
+
+.journal-featured .tile-arrow {
+  width: 2.65rem;
+  height: 2.65rem;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.journal-link:is(:hover, :focus-visible) h2 {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+}
+
+.journal-link:is(:hover, :focus-visible) .tile-arrow {
+  border-color: var(--line-strong);
+  background: var(--accent-tint);
 }
 
 .about-intro {
@@ -887,6 +989,27 @@ a.glass-panel:hover {
   padding-top: 1.35rem;
   border-top: 1px solid var(--glass-edge);
 }
+
+.journal-entry {
+  max-width: 46rem;
+}
+
+.journal-entry .entry-sheet {
+  padding: clamp(0.9rem, 2.8vw, 1.85rem) 0 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.journal-entry :is(.entry-header, .entry-copy) {
+  max-width: none;
+}
+
+.journal-entry .entry-copy {
+  margin-top: clamp(1.4rem, 4vw, 2.65rem);
+  padding-top: clamp(1.15rem, 3.8vw, 2.25rem);
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+}
 .related-entry {
   margin-top: 0.85rem;
 }
@@ -932,15 +1055,17 @@ a.glass-panel:hover {
 ) {
   .site-dock {
     background:
-      radial-gradient(ellipse at 12% 0, var(--dock-glint), transparent 58%),
-      radial-gradient(ellipse at 88% 100%, var(--dock-glint), transparent 56%),
+      radial-gradient(ellipse at 9% 0%, var(--dock-rim), transparent 55%),
+      radial-gradient(ellipse at 96% 112%, var(--dock-glint), transparent 62%),
+      linear-gradient(175deg, var(--dock-glint), transparent 46%),
       var(--dock-glass);
-    -webkit-backdrop-filter: blur(16px) saturate(165%);
-    backdrop-filter: blur(16px) saturate(165%);
+    -webkit-backdrop-filter: blur(15px) saturate(170%);
+    backdrop-filter: blur(15px) saturate(170%);
   }
-  .hero-video-toggle {
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
+  .hero-video-toggle,
+  .hero-secondary {
+    -webkit-backdrop-filter: blur(9px) saturate(145%);
+    backdrop-filter: blur(9px) saturate(145%);
   }
 }
 
@@ -950,13 +1075,17 @@ a.glass-panel:hover {
     backdrop-filter: none;
     background: var(--surface);
   }
-  .hero-video-toggle {
+  .hero-video-toggle,
+  .hero-secondary {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     background: #17212f;
   }
   .home-site .site-toolbar {
     background: #152233;
+  }
+  .journal-featured {
+    background: var(--surface);
   }
 }
 
@@ -1011,12 +1140,18 @@ a.glass-panel:hover {
   .activity-grid,
   .home-bio,
   .collection-header,
-  .journal-page,
   .about-section {
     grid-template-columns: minmax(0, 1fr);
   }
-  .journal-intro {
-    position: static;
+  .journal-link {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .journal-copy {
+    grid-column: 1;
+  }
+  .journal-link .tile-arrow {
+    grid-row: 1 / span 2;
+    align-self: center;
   }
 
   .site-dock {

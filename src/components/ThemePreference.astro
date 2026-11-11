@@ -46,6 +46,7 @@
           // The chosen mode still applies for this page.
         }
         applyTheme();
+        document.dispatchEvent(new Event('theme-preference-change'));
         updateLabel();
       });
 
