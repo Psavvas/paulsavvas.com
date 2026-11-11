@@ -2,93 +2,171 @@
 import UiIcon from './UiIcon.astro';
 ---
 
-<div class="hero-film">
-  <picture class="home-wallpaper">
-    <source media="(max-width: 44rem)" srcset="/lakefront-mobile.webp" />
-    <img
-      src="/lakefront-1280.webp"
-      srcset="/lakefront-1280.webp 1280w, /lakefront.webp 2400w"
-      sizes="(max-width: 81rem) 91vw, 74rem"
-      alt="Chicago skyline and Lake Michigan"
-      width="2400"
-      height="1080"
-      fetchpriority="high"
-    />
-  </picture>
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    let timer;
+
+    function updateSkylinePeriod() {
+      const now = new Date();
+      const hour = now.getHours();
+      const period = hour >= 6 && hour < 18 ? 'day' : 'night';
+      const next = new Date(now);
+
+      next.setHours(period === 'day' ? 18 : 6, 0, 0, 0);
+      if (hour >= 18) next.setDate(next.getDate() + 1);
+      clearTimeout(timer);
+      timer = setTimeout(updateSkylinePeriod, next.getTime() - now.getTime());
+
+      if (root.dataset.skylinePeriod !== period) {
+        root.dataset.skylinePeriod = period;
+        document.dispatchEvent(new Event('skyline-period-change'));
+      }
+    }
+
+    updateSkylinePeriod();
+    window.addEventListener('pageshow', updateSkylinePeriod);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) updateSkylinePeriod();
+    });
+  })();
+</script>
+
+<div class="hero-film" aria-hidden="true">
   <video
     class="home-video"
     data-hero-video
-    data-desktop-src="/lakefront.mp4"
-    data-mobile-src="/lakefront-mobile.mp4"
+    data-day-src="/skyline-day.mp4"
+    data-day-mobile-src="/skyline-day-mobile.mp4"
+    data-night-src="/skyline-night.mp4"
+    data-night-mobile-src="/skyline-night-mobile.mp4"
     muted
     playsinline
-    preload="none"
-    aria-hidden="true"></video>
-  <button
-    class="site-btn hero-video-toggle"
-    type="button"
-    data-hero-video-toggle
-    aria-label="Play skyline video"
-    hidden
-  >
-    <span data-play-icon><UiIcon name="play" /></span>
-    <span data-pause-icon><UiIcon name="pause" /></span>
-    <span data-video-action>Play video</span>
-  </button>
+    loop
+    preload="none"></video>
 </div>
+<button
+  class="icon-control hero-video-toggle"
+  type="button"
+  data-hero-video-toggle
+  aria-label="Play skyline video"
+  title="Play skyline video"
+  hidden
+>
+  <span data-play-icon><UiIcon name="play" /></span>
+  <span data-pause-icon><UiIcon name="pause" /></span>
+</button>
 
 <script>
   const video = document.querySelector<HTMLVideoElement>('[data-hero-video]');
   const toggle = document.querySelector<HTMLButtonElement>(
     '[data-hero-video-toggle]'
   );
-  const label = toggle?.querySelector('[data-video-action]');
 
-  if (video && toggle && label) {
-    const updateControl = () => {
-      const playing = !video.paused && !video.ended;
-      const action = playing ? 'Pause' : video.ended ? 'Replay' : 'Play';
-      toggle.toggleAttribute('data-playing', playing);
-      toggle.setAttribute('aria-label', action + ' skyline video');
-      label.textContent = action + ' video';
-    };
+  if (video && toggle) setupHeroVideo(video, toggle);
 
-    toggle.hidden = false;
-    toggle.addEventListener('click', () => {
-      if (!video.paused && !video.ended) {
+  function setupHeroVideo(video: HTMLVideoElement, toggle: HTMLButtonElement) {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const compact = window.matchMedia('(max-width: 44rem)');
+    const connection = (
+      navigator as Navigator & { connection?: { saveData?: boolean } }
+    ).connection;
+    let playbackRequested = !reducedMotion.matches && !connection?.saveData;
+    let inView = false;
+    let pageReady = false;
+
+    function updateControl() {
+      const label = playbackRequested
+        ? 'Pause skyline video'
+        : 'Play skyline video';
+      toggle.toggleAttribute('data-playing', playbackRequested);
+      toggle.setAttribute('aria-label', label);
+      toggle.title = label;
+    }
+
+    function syncPlayback() {
+      const period =
+        document.documentElement.dataset.skylinePeriod === 'night'
+          ? 'night'
+          : 'day';
+      const source =
+        video.dataset[`${period}${compact.matches ? 'Mobile' : ''}Src`];
+      const loadedSource = video.getAttribute('src');
+
+      if (loadedSource && loadedSource !== source) {
+        video.removeAttribute('data-video-ready');
+        video.removeAttribute('src');
+        video.load();
+      }
+
+      updateControl();
+      if (
+        !source ||
+        !playbackRequested ||
+        !pageReady ||
+        !inView ||
+        document.hidden
+      ) {
         video.pause();
         return;
       }
 
-      if (!video.hasAttribute('src')) {
-        const compact = window.matchMedia('(max-width: 44rem)').matches;
-        const source = compact
-          ? video.dataset.mobileSrc
-          : video.dataset.desktopSrc;
-        if (!source) return;
-        video.src = source;
+      if (loadedSource !== source) video.src = source;
+      if (video.paused) {
+        video.play().catch((error: DOMException) => {
+          if (error.name === 'AbortError') return;
+          playbackRequested = false;
+          updateControl();
+        });
       }
+    }
 
-      video.play().catch(updateControl);
+    toggle.hidden = false;
+    updateControl();
+    toggle.addEventListener('click', () => {
+      playbackRequested = !playbackRequested;
+      pageReady = true;
+      if (playbackRequested && video.error) video.load();
+      syncPlayback();
     });
 
-    video.addEventListener('play', updateControl);
-    video.addEventListener('pause', updateControl);
-    video.addEventListener('ended', updateControl);
     video.addEventListener('playing', () =>
       video.setAttribute('data-video-ready', '')
     );
     video.addEventListener('error', () => {
       video.removeAttribute('data-video-ready');
-      toggle.hidden = true;
+      playbackRequested = false;
+      updateControl();
     });
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) video.pause();
-    });
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting) video.pause();
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.intersectionRatio >= 0.15;
+        syncPlayback();
+      },
+      { threshold: 0.15 }
+    );
+
     observer.observe(video);
+    document.addEventListener('skyline-period-change', syncPlayback);
+    document.addEventListener('visibilitychange', syncPlayback);
+    compact.addEventListener('change', syncPlayback);
+    reducedMotion.addEventListener('change', () => {
+      if (reducedMotion.matches) playbackRequested = false;
+      syncPlayback();
+    });
+
+    function enableAfterPaint() {
+      const enable = () => {
+        pageReady = true;
+        syncPlayback();
+      };
+      if ('requestIdleCallback' in window)
+        window.requestIdleCallback(enable, { timeout: 600 });
+      else setTimeout(enable, 100);
+    }
+
+    if (document.readyState === 'complete') enableAfterPaint();
+    else window.addEventListener('load', enableAfterPaint, { once: true });
   }
 </script>
